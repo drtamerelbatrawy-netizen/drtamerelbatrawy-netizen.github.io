@@ -10,23 +10,23 @@ const classificationReferences={
 };
 const starLabels=['غير محدد','نجمة واحدة','نجمتان','3 نجوم','4 نجوم','5 نجوم','5 نجوم فاخر'];
 function classificationLabel(settings=preferences) {
- const n=settings.classificationByProperty?.[settings.scenario]??1;
+ const n=settings.classificationByProperty?.[settings.scenario]??0;
  return n?'مستهدف '+starLabels[n]:'التصنيف المستهدف غير محدد';
 }
 function starFields(scenario) {
  const options=starLabels.map((name,n)=>[String(n),name]).filter(([n])=>Number(n)===0||classificationReferences[scenario][1][Number(n)-1]>0);
- return choose('targetStars','تصنيف النجوم المستهدف',options,String(preferences.classificationByProperty?.[scenario]??1));
+ return choose('targetStars','تصنيف النجوم المستهدف',options,String(preferences.classificationByProperty?.[scenario]??0));
 }
 function classificationPanel(){
  const [doc,points]=classificationReferences[preferences.scenario];
- const n=preferences.classificationByProperty?.[preferences.scenario]??1;
+ const n=preferences.classificationByProperty?.[preferences.scenario]??0;
  const link='https://cdn.mt.gov.sa/mtportal/mt-fe-production/content/policies-regulations/documents/classification-criteria/'+doc+'-classification-criteria-ar-v01.pdf';
  const mix=capacityMix();
- const count=mix[0][1]+mix[1][1], keys=total(mix,x=>x[1]);
+ const keys=total(mix,x=>x[1]), count=keys;
  return panel('التصنيف السياحي المستهدف',row('الفئة المختارة',esc(classificationLabel()))+
   (n?row('الحد الأدنى للنقاط في المرجع',pn(points[n-1])):'')+
-  (preferences.scenario==='apartments'?row('حصة الشقق من وحدات الضيافة',pn(count)+' من '+pn(keys)+' · '+percent(count/keys*100))+row('الحد المرجعي لحصة الشقق','51%'):'')+
-  '<p class="muted">الحد الأدنى للنقاط للمراجعة مع المعايير الإلزامية. الفئة المدخلة هدف تخطيطي، وشهادة التصنيف تصدر من الجهة المختصة.</p><p><a href="'+link+'" target="_blank" rel="noopener">مرجع معايير التصنيف · وزارة السياحة</a></p>');
+  (preferences.scenario==='apartments'?row('حصة الشقق من وحدات الضيافة',pn(count)+' من '+pn(keys)+' · '+percent(count/keys*100)+' · جميع الوحدات شقق مجهزة')+row('الحد المرجعي لحصة الشقق','51%'):'')+
+  '<p class="muted">لم يحدد العميل فئة النجوم المستهدفة بعد. اختر الفئة من لوحة التحكم ليظهر الحد الأدنى للنقاط. نسخة المرجع المرفقة في ملفات المشروع موسومة 2022 V1.0، ويُراجع الإصدار الساري عند دراسة الامتثال. شهادة التصنيف تصدر من الجهة المختصة.</p><p><a href="'+link+'" target="_blank" rel="noopener">مرجع معايير التصنيف · وزارة السياحة</a></p>');
 }
 const capacityMix=(settings=preferences)=>{
  const source=scenarios[settings.scenario].rooms;
@@ -80,6 +80,7 @@ function investment(p,settings=preferences){
  const rows=[
   ['تهيئة المبنى والتشطيبات والأنظمة الثابتة',base.build],['الهندسة والإشراف',design],['احتياطي الأعمال الإنشائية',contingency],
   ...Array.from(new Set(equipmentRows.map(x=>x.zone))).map(zone=>['تجهيز · '+zone,total(equipmentRows.filter(x=>x.zone===zone),x=>x.quantity*x.price)]),
+  ['الديكور · تقدير العميل',anamRecords.client.decor],
   ['تكاليف ما قبل الافتتاح',capitalSetting(settings,'startupCost')],['رأس المال العامل الابتدائي',capitalSetting(settings,'workingCapital')]
  ];
  return {base,design,contingency,rows,total:total(rows,x=>x[1])};
@@ -107,6 +108,18 @@ function returnScenarioPanel(p){
    row('النتيجة','الهدف خارج نطاق الأسعار المختبر'))+
   '<p class="muted">سيناريو تخطيطي عند إشغال 75% مع تعديل أسعار البيع والإبقاء على مدخلات التكلفة الحالية. يتطلب تحقق الأسعار والإشغال من السوق.</p>');
 }
+function fundingPanel(p){
+ const c=anamRecords.client, t=anamRecords.transfers;
+ return panel('مصادر التمويل والمبالغ المدفوعة',
+  row('التمويل المستهدف',pm(p.fundingTarget))+
+  row('الهيكل المطروح مبدئيًا',pn(c.loanShare)+'% تمويل · '+pn(c.ownShare)+'% مساهمة ذاتية')+
+  row('المساهمة الذاتية المذكورة من العميل',pm(c.ownContribution))+
+  row('الفرق بين الاستثمار والتمويل المستهدف',pm(p.investmentEstimate-p.fundingTarget))+
+  row('مبالغ ذكر العميل سدادها',pm(c.paid))+
+  row('بيان الحوالات والمبالغ المسلّمة',pm(t.total)+' في '+pn(t.count)+' حوالة من '+t.from+' إلى '+t.to)+
+  row('منها للمشروع وفق البيان',pm(t.project))+row('منها سلفة',pm(t.advance))+
+  '<p class="muted">هذه بيانات العميل الأولية. لا تُعد موافقة تمويلية ولا إثباتًا للسداد، وتُطابق بالإيصالات والعقود. نسبة 70% من 7.5 مليون تساوي 5.25 مليون، فيُوضَّح هل المستهدف 5 ملايين هو القرض وحده.</p>');
+}
 function investmentPage(){
  const p=profile(), value=investment(p), year=forecast(p,0,daysInYear(preferences.year));
  const base=value.total, projectTotal=p.investmentEstimate;
@@ -117,9 +130,12 @@ function investmentPage(){
  return '<div class="heading"><div><h1>إجماليات الاستثمار والعائد</h1><p class="muted">'+esc(p.label)+' · موازنة '+pn(preferences.year)+'</p></div>'+
  action('go','تعديل مدخلات الاستثمار','control','primary')+'</div>'+
  controlCards([['إجمالي الاستثمار التقديري',pm(p.investmentEstimate)],['التمويل المستهدف',pm(p.fundingTarget)],['حصر البنود المدرجة',pm(base)],['تكلفة المتر المبني',pm(projectTotal/p.gross)],['تكلفة كل غرفة أو جناح',pm(projectTotal/p.keys)],['صافي الربح التخطيطي إلى الاستثمار',returnPercent(year.net,p.investmentEstimate)]])+
- panel('حالة تقديرات الاستثمار',row('الفجوة بين الاستثمار والتمويل المستهدف',pm(projectTotal-p.fundingTarget))+
- row('قيمة عقد أعمال التعديلات الموقع',pm(220000))+
- '<p>يُراجع نطاق عقد التعديلات مقابل تسعير التهيئة لتجنب ازدواج الحصر. تشمل البنود التي تحتاج تسعيرًا مستقلًا تجهيزات المطعم والمقهى والقاعة والسطح والمركبات عند اعتماد الشراء، إلى جانب الافتتاح ورأس المال العامل.</p>')+
+ fundingPanel(p)+
+ panel('مطابقة التقدير الإجمالي مع البنود المحصورة',row('إجمالي الاستثمار التقديري من العميل',pm(projectTotal))+
+ row('البنود المحصورة بالمستندات والتقديرات',pm(base))+
+ row('رصيد غير مفصل بعد',pm(Math.max(0,projectTotal-base)))+
+ row('قيمة عقد أعمال التعديلات الموقع رقم '+esc(anamRecords.contractor.contract),pm(anamRecords.contractor.value))+
+ '<p>الرصيد غير المفصل يحتاج حصرًا من المالك. البنود التي لم تُسعّر بعد: المركبات الأربع (سيارتا مرسيدس لنقل المطار وسيارتان كبيرتان للرحلات) إذا اعتُمد الشراء، وتجهيزات المطعم والمقهى والقاعة وكافيه السطح، والإيجار المدفوع مقدمًا، وما قبل الافتتاح، ورأس المال العامل. يُراجع نطاق عقد التعديلات مقابل تسعير التهيئة لتجنب ازدواج الحصر.</p>')+
  displaySection('حصر التكلفة الاستثمارية',['البند','التكلفة','من إجمالي الحصر','لكل متر مبني','لكل غرفة'],value.rows.concat([['إجمالي الحصر',base]]).map(([label,n])=>[
   esc(label),pm(n),returnPercent(n,base),pm(n/p.gross),pm(n/p.keys)
  ]))+

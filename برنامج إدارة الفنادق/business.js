@@ -242,7 +242,7 @@ function departmentalBudget(p,f,settings=preferences){
  }
  const central=get('الإدارات المساندة');
  central.payroll=f.wages-allocated;
- return [...rows.values()].map(x=>({...x,expense:x.materials+x.payroll+x.fees,result:x.revenue-x.materials-x.payroll-x.fees}));
+ return [...rows.values()].filter(x=>x.revenue||x.materials||x.payroll||x.fees).map(x=>({...x,expense:x.materials+x.payroll+x.fees,result:x.revenue-x.materials-x.payroll-x.fees}));
 }
 const modelPages={departmentPL:'ربحية الأقسام',operatingCosts:'التكاليف التشغيلية وصافي الربح'};
 const budgetPeriods=(p,settings)=>{
