@@ -16,7 +16,6 @@ const catalog = [
  ['PRO','بروتين وقائمة يومية','مطبخ ساخن','حصة',34,'وجبة',1,3,5,true],
  ['COF','بن وأدوات تقديم','مقهى اللوبي','طلب',9,'قهوة وحلويات',1,10,45,true],
  ['WAT','عبوة مياه','مخزن الأغذية','عبوة',2,'غرف',2,10,180,true],
- ['SPA','زيوت ومستهلكات علاج','السبا','مجموعة',24,'جلسة تدليك',1,10,0,false],
  ['EVT','مستهلكات ضيافة فعالية','القاعات','حصة',16,'تقديم طعام للاجتماع',1,8,45,true],
  ['FLT','مرشح تكييف قياسي','الهندسة','قطعة',66,'غرف',0.04,15,0,false],
  ['PPE','أدوات حماية ونظافة','المخزن العام','طقم',15,'غرف',0.2,10,0,false],
@@ -31,21 +30,16 @@ const catalog = [
  ['BOX','عبوات تقديم ونقل','المطبخ','قطعة',4,'وجبة خفيفة',1,10,0,false],
  ['CLE','أقراص آلات غسيل الأواني','غسيل الأواني','عبوة',23,'وجبة',0.08,10,0,false],
  ['EVP','ورق وأدوات اجتماعات','القاعات','طقم',12,'تقديم طعام للاجتماع',1,10,0,false],
- ['THR','أغطية علاج أحادية الاستخدام','السبا','قطعة',6,'جلسة تدليك',1,7,0,false],
- ['SWT','حزمة مناشف المسبح','السبا','طقم',49,'دخول أساسي للمقيم',0.22,7,0,false],
- ['PTK','مستهلكات جهاز اختبار المياه','المسبح','حزمة',85,'دخول أساسي للمقيم',0.05,12,120,true],
- ['KID','مستهلكات ورش نادي الأطفال','الأنشطة','حزمة',11,'نادي الأطفال',1,10,0,false],
  ['KDS','بطاقات مفاتيح الغرف','الاستقبال','بطاقة',8,'غرف',0.25,10,0,false],
  ['POS','لفات طباعة الإيصالات','المخزن العام','لفة',5,'طلب',0.02,10,0,false],
  ['VAN','مستهلكات تجهيز رحلة نقل','النقل','طقم',8,'نقل المطار',1,7,0,false],
- ['GFT','تغليف منتجات التجزئة','التجزئة','عبوة',6,'هدايا ومستلزمات',1,10,0,false],
  ['BUL','مصباح وملحق كهربائي','الهندسة','قطعة',25,'غرف',0.04,14,0,false],
  ['PLM','طقم وصلات سباكة','الهندسة','طقم',45,'غرف',0.04,14,0,false]
 ];
 const inspectionTemplates = [
  ['FOOD','مطابقة سجل سلامة الغذاء','الأغذية والمشروبات','توثيق نتيجة القياس وفق خطة سلامة الغذاء المعتمدة للموقع',1],
  ['ROOM','فحص غرف قبل التسليم','التدبير والمغسلة','مراجعة عينة غرف مقابل قائمة التجهيز والنظافة',1],
- ['POOL','جاهزية المسبح والإنقاذ','السبا والترفيه','توثيق فحص المعدات والقياسات وفق خطة المرفق',1],
+ ['ALARM','فحص الإنذار والإطفاء','الأمن والسلامة','توثيق فحص لوحة الإنذار ومرشات وطفايات الحريق وفق مخططات السلامة للمشروع 003420',7],
  ['FIRE','مسارات الإخلاء وأبواب الطوارئ','الأمن والسلامة','تسجيل الجولة والملاحظات على المخارج',1],
  ['ENG','جولة محطات التشغيل','الهندسة وتقنية المعلومات','تأكيد جاهزية المحطات وإحالة العيوب إلى الصيانة',1],
  ['DATA','مراجعة الوصول إلى سجلات الضيوف','الموارد البشرية والجودة','مراجعة سجلات الاطلاع والصلاحيات وفق سياسة المنشأة',7],
@@ -79,6 +73,8 @@ function inventoryPlan() {
 function resources() {
  if(state.resources) {
   if(state.resources.catalogSize!==catalog.length) {
+   const skus=new Set(catalog.map(x=>x[0]));
+   state.resources.lots=state.resources.lots.filter(x=>skus.has(x.sku));
    const known=new Set(state.resources.lots.map(x=>x.sku));
    for(const item of inventoryPlan().filter(x=>!known.has(x.sku))) {
     state.resources.lots.push({id:'OPEN-'+item.sku,sku:item.sku,quantity:item.min,price:item.price,expiry:item.shelf?addDays(state.day,item.shelf):'',received:state.day});
@@ -101,7 +97,7 @@ function resources() {
  consume(demo.sku,Math.min(demo.demand,stockBalance(demo.sku)),'صرف','صرف افتتاحي تجريبي للتدبير');
  return state.resources;
 }
-const stockItem=sku=>inventoryPlan().find(x=>x.sku===sku);
+const stockItem=sku=>inventoryPlan().find(x=>x.sku===sku)||{sku,name:sku,store:'صنف ملغى',unit:'',price:0,demand:0,lead:0,shelf:0,perishable:false,min:0,max:0};
 const usableLots=(sku,day=state.day)=>resources().lots.filter(x=>x.sku===sku&&x.quantity>0&&(!x.expiry||x.expiry>=day)).sort((a,b)=>(a.expiry||'9999').localeCompare(b.expiry||'9999')||a.received.localeCompare(b.received));
 const stockBalance=sku=>total(usableLots(sku),x=>x.quantity);
 const bill=o=>o.received*o.price;
@@ -259,7 +255,7 @@ function workload() {
   ['المبيعات والإيرادات','فعاليات مدرجة لتاريخ اليوم',state.events.filter(x=>x.start.slice(0,10)<=state.day&&x.end.slice(0,10)>=state.day&&x.status==='مؤكد').length,1],
   ['السبا والترفيه','مواعيد أنشطة مؤكدة اليوم',state.resort.filter(x=>x.start.slice(0,10)<=state.day&&x.end.slice(0,10)>=state.day&&x.status==='مؤكد').length,2],
   ['الهندسة وتقنية المعلومات','بلاغات صيانة مفتوحة',state.maintenance.filter(x=>x.status!=='مغلق').length,3]
- ];
+ ].filter(x=>x[0]!=='السبا والترفيه'||controlProfile().isResort);
 }
 function staffControl() {
  const people=roster();

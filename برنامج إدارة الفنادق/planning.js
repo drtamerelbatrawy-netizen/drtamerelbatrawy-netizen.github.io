@@ -14,6 +14,48 @@ const anam = {
  annualRent:350000, investmentEstimate:7500000, fundingTarget:5000000,
  fitoutEstimate:570100, furnishingEstimate:756000
 };
+// Facts taken from the client's project files (folder «215فندق انام»). Each block names its source document.
+const anamRecords = {
+ permit:{ // رخصة البناء · صورة واتساب 24 نوفمبر 2026 الساعة 11.21.18
+  number:'410477974', issued:'1441/05/26 هـ', expires:'1442/05/26 هـ', type:'سكني تجاري · إضافة وتعديل مكونات بناء',
+  plot:'916', plan:'42', district:'الحيلة الغربي', municipality:'بلدية محايل عسير', land:635,
+  building:'بدروم وستة أدوار وملحق علوي', frontage:'شارع عرض 40 م شرقًا وشارع عرض 15 م جنوبًا'
+ },
+ lease:{ // عقد الإيجار التجاري الموحد ص 1–2 و15–17
+  number:'20292668986 / 1-0', signed:'2023-09-19', start:'2024-01-13', end:'2038-08-30', days:5343,
+  annual:350000, total:5121427, payments:30, regular:175000, last:46427, deposit:100000,
+  property:'42 وحدة في بيانات العقار · 7 طوابق · مصعدان'
+ },
+ trademark:{ // طلب العلامة التجارية فندق انام.pdf
+  number:'SA-1193915', classNo:43, ar:'فندق انام للشقق الفندقية', en:'JE DORS For Hotel Apartments',
+  status:'نشر قبول تسجيل العلامة التجارية', statusDate:'2026-02-21', applicant:'مؤسسة النقطة الأولى لخدمات السيارات'
+ },
+ safety:{project:'003420', dated:'2024-05-26', lat:18.496956, lng:42.062858}, // 2_merged.pdf
+ pin:{lat:18.4968788, lng:42.0630696, url:'https://www.google.com/maps/place/18%C2%B029\'48.8%22N+42%C2%B003\'47.1%22E/@18.4968788,42.0630696,687m/data=!3m1!1e3'}, // خريطة الموقع.docx
+ transfers:{total:1305000, project:1280000, advance:25000, count:19, from:'2023-11-01', to:'2025-08-18'}, // بيان المبالغ.pdf
+ client:{ // ملخص العميل والتسجيل الصوتي
+  paid:850000, ownContribution:2500000, decor:300000, furnishing:700000, loanShare:70, ownShare:30
+ },
+ contractor:{name:'مؤسسة الجسور المقاومة للمقاولات', contract:'142', value:220000, pricingDate:'2024-11-16', pricingTotal:570100}
+};
+// Itemized fit-out pricing from «تسعير اعمال فندق.pdf» (16 نوفمبر 2024). Item 10 is listed with unit 12 × 6 = 72,000 in the source.
+const anamFitout = [
+ ['وحدات VIP شاملة التكسير والصحي والبلاط والدهان والجبس','قطعة',2,50000],
+ ['مراجعة الجبس والكهرباء في كامل الدور مع إزالة ناتج التكسير','دور',5,18000],
+ ['توريد وتركيب أقفال دخول ذكية بالكروت ولوحة النظام','وحدة',36,2500],
+ ['تمديدات وحدات تكييف جديدة ومراجعة التمديدات القديمة','قطعة',1,25000],
+ ['عمل فتحات بالكور في المبنى','فتحة',103,100],
+ ['مراجعة تمديدات الكهرباء التالفة في الدور','دور',5,2000],
+ ['إنارة بروفايل في الممرات','دور',5,2500],
+ ['ديكور منطقة المصاعد','دور',6,10000],
+ ['جبس بورد خلف السرير وإخفاء بروز الأعمدة','موقع',15,2000],
+ ['دهان داخلي للممرات والمصاعد وسلالم الهروب','دور',6,12000],
+ ['بلاط منطقة المصاعد','دور',5,3000],
+ ['توصيل التكييف والسباكة والكهرباء ومواسير الحريق لكل وحدة','وحدة',36,300],
+ ['تعديلات تمديدات الكهرباء ومفاتيح الدركسون','وحدة',11,1500],
+ ['ترميمات لياسة لمناطق التمديدات الجديدة','دور',5,2000],
+ ['توصيلات التلفاز والكاميرا والهاتف','دور',6,3000]
+];
 const scenarios = {
  apartments:{...anam,rooms:[
   ['استوديو',5,26,4,0,2,170],['غرفة وصالة',20,44,5,0,2,230],
@@ -152,7 +194,7 @@ function construction(p,settings=preferences) {
   const reference=budgetInputs.constructionPrices[ref]??base;
   rows.push({packageName,scope,unit,qty,reference,ref,rate:Math.round(reference*(settings.buildIndex??100)*settings.costIndex/10000)});
  };
- push('تعديلات وتشطيبات وتجهيزات ثابتة','المبنى القائم','حزمة',1,anam.fitoutEstimate);
+ anamFitout.forEach(([name,unit,qty,rate],i)=>push(String(i+1).padStart(2,'0')+' · '+name,'المبنى القائم',unit,qty,rate));
  return rows;
 }
 const calendarMonths=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -202,6 +244,50 @@ function planningControls() {
   '<button class="primary">تطبيق الافتراضات</button></form>';
 }
 
+const pn6=x=>Number(x).toFixed(6);
+const anamImages=[
+ ['assets/anam-facade.jpg','الواجهة المقترحة بطابع عسيري'],
+ ['assets/anam-reception.jpg','تصور الاستقبال'],
+ ['assets/anam-apartment.jpg','تصور الشقة'],
+ ['assets/anam-aerial-annotated.jpg','الخريطة الجوية للموقع مع التوضيحات'],
+ ['assets/anam-aerial.jpg','الصورة الجوية للموقع']
+];
+function projectGallery(){
+ return panel('الصور التصميمية وخريطة الموقع','<div class="gallery">'+anamImages.map(([src,alt])=>'<figure><a href="'+src+'" target="_blank" rel="noopener"><img src="'+src+'" alt="'+esc(alt)+'" loading="lazy"></a><figcaption>'+esc(alt)+'</figcaption></figure>').join('')+'</div><p class="muted">الصور تصورات تصميمية للمشروع، وتُعتمد المخططات المعمارية ومخططات السلامة كمرجع فني.</p>');
+}
+function leaseSchedule(){
+ const l=anamRecords.lease, rows=[];
+ const start=new Date(l.start+'T00:00:00Z');
+ for(let i=0;i<l.payments;i++){
+  const due=new Date(start); due.setUTCMonth(due.getUTCMonth()+6*i);
+  rows.push([pn(i+1),due.toISOString().slice(0,10),pm(i===l.payments-1?l.last:l.regular)]);
+ }
+ return rows;
+}
+function lessorPanel(){
+ const l=anamRecords.lease;
+ return panel('عقد الإيجار',
+  row('رقم العقد',esc(l.number))+row('تاريخ الإبرام',l.signed)+
+  row('مدة الانتفاع',l.start+' إلى '+l.end+' · '+pn(l.days)+' يومًا')+
+  row('الأجرة السنوية',pm(l.annual))+row('إجمالي قيمة العقد',pm(l.total))+
+  row('الدفعات',pn(l.payments)+' دفعة نصف سنوية · '+pm(l.regular)+' للدفعة المعتادة · '+pm(l.last)+' للدفعة الأخيرة')+
+  row('التأمين',pm(l.deposit))+row('بيانات العقار في العقد',esc(l.property))+
+  '<p class="muted">رقم 42 يخص العقار ككل. يُطابق السداد الفعلي مع إيصالاته.</p>'+
+  '<details><summary>جدول الدفعات</summary>'+table(['الدفعة','تاريخ الاستحقاق','المبلغ'],leaseSchedule())+'</details>');
+}
+function legalPanel(){
+ const b=anamRecords.permit, t=anamRecords.trademark, s=anamRecords.safety;
+ return panel('الرخص والعلامة التجارية والمخططات',
+  row('رخصة البناء','رقم '+esc(b.number)+' · '+esc(b.type)+' · '+esc(b.municipality))+
+  row('القطعة والمخطط','قطعة '+esc(b.plot)+' · مخطط '+esc(b.plan)+' · حي '+esc(b.district)+' · '+asArea(b.land))+
+  row('مكونات المبنى في الرخصة',esc(b.building))+
+  row('تاريخ الرخصة','صدرت '+esc(b.issued)+' · تنتهي '+esc(b.expires)+' في النسخة المرفقة')+
+  row('العلامة التجارية',esc(t.ar)+' · '+esc(t.en))+
+  row('طلب العلامة',esc(t.number)+' · الفئة '+pn(t.classNo)+' · '+esc(t.status)+' بتاريخ '+t.statusDate)+
+  row('طالب التسجيل',esc(t.applicant))+
+  row('مخططات السلامة','مشروع '+esc(s.project)+' بتاريخ '+s.dated+' · الإنذار والإطفاء والإخلاء')+
+  '<p class="muted">تثبت الطاقة المرخصة بالترخيص السياحي الساري وجدول الوحدات المعتمد. يُراجع ترخيص البناء الساري، وتُراجع شهادة تسجيل العلامة لإثبات الوضع النهائي.</p>');
+}
 function sitePlanView(p) {
  return '<div class="cards">'+[
   card('مساحة الأرض',asArea(p.land)),card('وحدات الضيافة المخططة',pn(p.keys)),
@@ -209,10 +295,13 @@ function sitePlanView(p) {
  ].join('')+'</div>'+
  panel('الموقع وتوزيع المبنى',row('الموقع',esc(p.location))+
   row('الأدوار','بدروم وستة أدوار وملحق')+row('الأرضي','استقبال ومطعم ومقهى')+
-  row('البدروم','مواقف وخدمات · قاعة اجتماعات مقترحة')+
-  row('وصف العقار في عقد الإيجار','42 وحدة عقارية تشمل استخدامات متعددة')+
-  row('فترة الإيجار','13 يناير 2024 إلى 30 أغسطس 2038')+
-  row('دورية الإيجار','دفعات نصف سنوية'))+
+  row('البدروم','مواقف وخدمات · قاعة اجتماعات مقترحة')+row('السطح','كافيه سطح مقترح')+
+  row('الواجهات',esc(anamRecords.permit.frontage))+
+  row('إحداثيات الموقع',pn6(anamRecords.pin.lat)+'، '+pn6(anamRecords.pin.lng)+' · <a href="'+esc(anamRecords.pin.url)+'" target="_blank" rel="noopener">فتح في خرائط Google</a>')+
+  row('إحداثيات مخطط السلامة',pn6(anamRecords.safety.lat)+'، '+pn6(anamRecords.safety.lng))+
+  '<p class="muted">دبوس الخريطة للدلالة التقريبية. يقع المبنى على الطريق المقابل لمشروع تطوير الحدائق الذي أعلنته محافظة محايل عسير بالشراكة مع القطاع الخاص، وهو سياق للموقع وليس جزءًا من المشروع.</p>')+
+ projectGallery()+
+ lessorPanel()+legalPanel()+
  displaySection('برنامج الوحدات',['النوع','العدد المخطط','السعة التقديرية للوحدة','سعر الليلة التخطيطي'],
   p.units.map(x=>[esc(x.name),pn(x.count),pn(x.beds),pm(x.price)]))+
  displaySection('خدمات قيد الدراسة',['الخدمة','الحالة'],proposedServices)+panel('افتراض تشغيل النقل والرحلات','<p>تتضمن الموازنة تكلفة تقديم الخدمة والمركبة والسائق ضمن تكلفة الرحلة. يتضمن برنامج الخدمة سيارتين لنقل المطار وسيارتين كبيرتين للرحلات. تُراجع تكاليف اقتناء المركبات ضمن الاستثمار عند اعتماد خيار الشراء. تبدأ خطة القاعة وكافيه السطح بصفر طلبات، ويمكن تفعيل الإيراد من مدخلات التشغيل بعد تحديد السعة والجدوى.</p>')+classificationPanel();
@@ -231,7 +320,7 @@ function staffingView(p) {
    const base=total(r,x=>x.base*x.count);
    return [name,pn(total(r,x=>x.count)),pm(base),pm(monthly-base),pm(monthly),pm(monthly*12)];
  }))+displaySection('التسلسل الإشرافي والتعويضات حسب المنصب',['القسم','المنصب','المستوى','يتبع','العدد','أساسي / فرد','سكن','نقل','حوافز','منافع وتأمينات','إجمالي / فرد','تكلفة شهرية','تكلفة سنوية','المدخل'],rows.map(x=>[x.department,x.title,x.level,x.reports,pn(x.count),...[x.base,x.housing,x.transport,x.incentive,x.benefits,x.person,x.monthly,x.monthly*12].map(pm),budgetButton('salaryPrices',x.title,budgetInputs.salaryPrices[x.title]??x.reference)]))+
- panel('افتراض التعويضات','<p>سكن 15%، نقل 8%، حافز 5%، ومخصص منافع وتأمينات 12% من الأساسي و420 ريالًا للفرد شهريًا. تُراجع الرواتب السوقية حسب الخبرة ونوع الفندق. استُخدم دليل محلي لوظائف الإدارة والاستقبال والطهي وإعلان لشيف القسم، وباقي المسميات والبدلات افتراضات تعويض قابلة للتعديل. المخصص جزء من تكلفة صاحب العمل في الموازنة.</p><p><a href="'+wageGuide+'">دليل الرواتب السعودي 2026</a> · <a href="'+wageBenchmarks+'">مرجع وظائف التشغيل</a> · <a href="'+jobGuide+'">إعلان شيف قسم في الرياض</a></p>');
+ panel('افتراض التعويضات','<p>سكن 15%، نقل 8%، حافز 5%، ومخصص منافع وتأمينات 12% من الأساسي و420 ريالًا للفرد شهريًا. تُراجع الرواتب السوقية حسب الخبرة ونوع الفندق. استُخدم دليل محلي لوظائف الإدارة والاستقبال والطهي وإعلان لشيف القسم، وباقي المسميات والبدلات افتراضات تعويض قابلة للتعديل. المخصص جزء من تكلفة صاحب العمل في الموازنة.</p><p><a href="'+wageGuide+'">دليل الرواتب السعودي 2026</a> · <a href="'+wageBenchmarks+'">مرجع وظائف التشغيل</a> · <a href="'+jobGuide+'">إعلان وظيفة شيف قسم (مرجع راتب)</a></p>');
 }
 function equipmentView(p) {
  const rows=equipment(p);
@@ -241,7 +330,7 @@ function equipmentView(p) {
   const r=rows.filter(x=>x.zone===zone);
   return [esc(zone),pn(r.length),pn(total(r,x=>x.quantity)),pm(total(r,x=>x.quantity*x.price))];
  }))+panel('الحصر التفصيلي القابل للبحث','<label>ابحث في الأصناف والأقسام<input type="search" id="plan-equipment-search" placeholder="مثل أثاث أو مطبخ"></label><div id="plan-equipment-results">'+equipmentTable(rows)+'</div>')+
- panel('تقدير الأسعار والكميات','<p>يشمل الحصر تأثيث الوحدات وتجهيز مطابخها. يؤثر تعديل الأسعار في موازنة التأثيث والإهلاك ومخصص الصيانة. تُقدّر تجهيزات المطعم والمقهى وبنود الافتتاح عند استكمال الحصر.</p>');
+ panel('تقدير الأسعار والكميات','<p>الحصر مطابق لبيان أسعار أثاث فندق أنام بإجمالي 756,000 ريال. يتضمن العرض 43 طقم غرفة نوم و35 مطبخًا مقابل 37 وحدة، فتُطابق الكميات مع جدول الوحدات وعدد غرف النوم قبل التعاقد. قدّر العميل التأثيث مبدئيًا بنحو 700 ألف ريال والديكور بنحو 300 ألف ريال، ويظهر الديكور في إجماليات الاستثمار. يؤثر تعديل الأسعار في موازنة التأثيث والإهلاك ومخصص الصيانة. تُقدّر تجهيزات المطعم والمقهى وبنود الافتتاح عند استكمال الحصر.</p>');
 }
 function equipmentTable(rows) {
  return table(['الموقع','الصنف','الكمية','السعر المعلن شامل الضريبة','سعر الوحدة للموازنة','الإجمالي','درجة التحقق','المصدر','الإجراء'],rows.map(x=>[
@@ -261,7 +350,7 @@ function constructionView(p) {
   return [scope,pn(inScope.length),pm(total(inScope,x=>x.qty*x.rate))];
  }))+displaySection('بنود الكميات والأسعار للمباني والموقع',['الموقع','البند','الوحدة','الكمية','سعر الوحدة','الإجمالي','الموازنة'],rows.map(x=>[x.scope,x.packageName,x.unit,pn(x.qty),pm(x.rate),pm(x.qty*x.rate),budgetButton('constructionPrices',x.ref,x.reference)]))+
  panel('حدود الموازنة',row('إجمالي الإنشاء لكل مفتاح',pm(constructionCost/p.keys))+row('إجمالي الإنشاء والتجهيزات',pm(constructionCost+total(equipment(p),x=>x.quantity*x.price)))+
- '<p>الموازنة تخص تهيئة المبنى القائم. تخضع للتسوية بعد حصر الأعمال المنفذة والمتبقية.</p>');
+ '<p>البنود من تسعير أعمال الجسور المقاومة المؤرخ 16 نوفمبر 2024 بإجمالي 570,100 ريال. وقّع المالك مع المؤسسة العقد رقم 142 بقيمة 220,000 ريال لأعمال التعديلات والتشطيبات وفق نطاقه، فيُطابق نطاق العقد مع هذه البنود قبل جمع المبلغين. بند الدهان رقم 10 مدوّن بسعر وحدة 12 لكمية 6 مقابل إجمالي 72,000، وأُدرج هنا بسعر 12,000 للدور لمطابقة الإجمالي حتى يصحح المورد البند. أقفال الدخول الذكية وتوصيلات الوحدات محسوبة لـ36 وحدة مقابل 37 في برنامج الوحدات.</p>');
 }
 function periodFor(p) {
  const year=preferences.year, month=preferences.month, offsets=monthOffsets(year);
