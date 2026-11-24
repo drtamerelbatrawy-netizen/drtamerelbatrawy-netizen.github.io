@@ -10,16 +10,16 @@ const classificationReferences={
 };
 const starLabels=['غير محدد','نجمة واحدة','نجمتان','3 نجوم','4 نجوم','5 نجوم','5 نجوم فاخر'];
 function classificationLabel(settings=preferences) {
- const n=settings.classificationByProperty?.[settings.scenario]||0;
+ const n=settings.classificationByProperty?.[settings.scenario]??1;
  return n?'مستهدف '+starLabels[n]:'التصنيف المستهدف غير محدد';
 }
 function starFields(scenario) {
  const options=starLabels.map((name,n)=>[String(n),name]).filter(([n])=>Number(n)===0||classificationReferences[scenario][1][Number(n)-1]>0);
- return choose('targetStars','تصنيف النجوم المستهدف',options,String(preferences.classificationByProperty?.[scenario]||0));
+ return choose('targetStars','تصنيف النجوم المستهدف',options,String(preferences.classificationByProperty?.[scenario]??1));
 }
 function classificationPanel(){
  const [doc,points]=classificationReferences[preferences.scenario];
- const n=preferences.classificationByProperty?.[preferences.scenario]||0;
+ const n=preferences.classificationByProperty?.[preferences.scenario]??1;
  const link='https://cdn.mt.gov.sa/mtportal/mt-fe-production/content/policies-regulations/documents/classification-criteria/'+doc+'-classification-criteria-ar-v01.pdf';
  const mix=capacityMix();
  const count=mix[0][1]+mix[1][1], keys=total(mix,x=>x[1]);
@@ -84,7 +84,29 @@ function investment(p,settings=preferences){
  ];
  return {base,design,contingency,rows,total:total(rows,x=>x[1])};
 }
-const returnPercent=(n,d)=>d?percent(n*100/d):'بانتظار مدخل';
+const returnPercent=(n,d)=>d?(n*100/d).toFixed(2)+'%':'بانتظار مدخل';
+function returnScenario(p,settings=preferences){
+ const occupancy=75, target=0.171;
+ const targetProfit=p.investmentEstimate*target;
+ for(let priceIndex=100;priceIndex<=400;priceIndex++){
+  const scenario={...settings,occupancy,priceIndex};
+  const forecastYear=forecast(profile(scenario),0,daysInYear(scenario.year),scenario);
+  if(forecastYear.net>=targetProfit) return {occupancy,priceIndex,...forecastYear};
+ }
+ return null;
+}
+function returnScenarioPanel(p){
+ const plan=returnScenario(p);
+ return panel('سيناريو تجاوز عائد 17%',
+  row('صافي الربح المطلوب عند 17%',pm(p.investmentEstimate*0.17))+
+  (plan?row('الإشغال المفترض',percent(plan.occupancy))+
+   row('معامل أسعار الإقامة والخدمات',percent(plan.priceIndex))+
+   row('متوسط سعر الليلة ADR',pm(plan.roomRevenue/plan.sold))+
+   row('صافي الربح السنوي المتوقع',pm(plan.net))+
+   row('العائد السنوي المتوقع',returnPercent(plan.net,p.investmentEstimate)):
+   row('النتيجة','الهدف خارج نطاق الأسعار المختبر'))+
+  '<p class="muted">سيناريو تخطيطي عند إشغال 75% مع تعديل أسعار البيع والإبقاء على مدخلات التكلفة الحالية. يتطلب تحقق الأسعار والإشغال من السوق.</p>');
+}
 function investmentPage(){
  const p=profile(), value=investment(p), year=forecast(p,0,daysInYear(preferences.year));
  const base=value.total, projectTotal=p.investmentEstimate;
@@ -101,10 +123,11 @@ function investmentPage(){
  displaySection('مقارنة السنة التشغيلية مع الاستثمار',['البند','سنوي','من الاستثمار','لكل غرفة سنويًا','لكل ليلة مباعة'],margin.map(([label,n])=>[
   label,pm(n),returnPercent(n,projectTotal),pm(n/p.keys),year.sold?pm(n/year.sold):'بانتظار إشغال'
  ]))+
+ returnScenarioPanel(p)+
  panel('قراءة الاستثمار',row('مضاعف الاستثمار إلى الإيرادات',year.revenue?pn(projectTotal/year.revenue)+' مرة':'بانتظار إيراد')+
  row('متوسط سعر الليلة ADR',year.sold?pm(year.roomRevenue/year.sold):'بانتظار إشغال')+
  row('إيراد الغرفة المتاحة RevPAR',pm(year.roomRevenue/year.available))+
- row('مدة الاسترداد البسيطة بصافي الربح والإهلاك',year.net+year.depreciation>0?pn(base/(year.net+year.depreciation))+' سنة تقريبًا':'لا يتحقق الاسترداد ضمن التدفق السنوي المقدر')+
+ row('مدة الاسترداد البسيطة بصافي الربح والإهلاك',year.net+year.depreciation>0?pn(projectTotal/(year.net+year.depreciation))+' سنة تقريبًا':'لا يتحقق الاسترداد ضمن التدفق السنوي المقدر')+
  '<p class="muted">العائد السنوي على التكلفة يقارن سنة واحدة بموازنة الاستثمار. الاسترداد مؤشر مبسّط يضيف الإهلاك إلى الربح ويستخدم سنة تشغيل مستقرة. عندما تكون تكلفة الأرض صفرًا فهي غير مدرجة. تشمل موازنة الاستثمار رأس المال العامل ولا تُحمّل قيمته على مصروفات التشغيل.</p>');
 }
 const adminFields=[
