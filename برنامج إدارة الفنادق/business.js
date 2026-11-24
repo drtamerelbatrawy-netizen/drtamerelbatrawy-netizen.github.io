@@ -113,13 +113,13 @@ const procurement = [
  ['IT-12','النظافة والمخازن','مكنسة ساحة وآلة غسيل أرضيات',38500,'central',2],
  ['IT-13','الحدائق','جزازة ومعدات ري مستخدمة في الصيانة',24500,'central',1]
 ];
-const budgetDefaults={externalDemand:100,baseKwh:90,nightKwh:27,waterNight:260,waterBase:4,waterRate:9,maintenanceBasis:200,insuranceBasis:45,adminMonthly:6500,marketingBasis:180,interestYear:0,taxYear:0,equipmentPrices:{},servicePrices:{},salaryPrices:{},constructionPrices:{}};
+const budgetDefaults={hallBookingsMonthly:0,rooftopOrdersDaily:0,externalDemand:100,baseKwh:90,nightKwh:27,waterNight:260,waterBase:4,waterRate:9,maintenanceBasis:200,insuranceBasis:45,adminMonthly:6500,marketingBasis:180,interestYear:0,taxYear:0,equipmentPrices:{},servicePrices:{},salaryPrices:{},constructionPrices:{}};
 const modelStorage='anam-model-1';
 const budgetInputs={...budgetDefaults,...JSON.parse(localStorage.getItem(modelStorage)||'{}')};
 const foodTypes=new Set(['المطعم الرئيسي','مطعم التخصصات','مطعم المشويات','مقهى اللوبي','مطعم المسبح','المشروبات','الميني بار','المطبخ','خدمة الغرف','المطاعم']);
 const foodCovers=new Set(['بوفيه إفطار','غداء','عشاء','وجبة حسب القائمة','وجبة مشويات كاملة','وجبة خفيفة','قهوة وحلويات','تقديم طعام للاجتماع','وجبة خدمة الغرف','تجربة عشاء شاطئي']);
 function departmentFor(category){
- if(foodTypes.has(category)) return 'الأغذية والمشروبات';
+ if(category==='كافيه السطح'||foodTypes.has(category)) return 'الأغذية والمشروبات';
  if(['القاعات','خدمات الأعمال'].includes(category)) return 'الفعاليات والأعمال';
  if(['السبا','العناية','النادي','المسبح','الأنشطة','الشاطئ','الرحلات','المنتجع'].includes(category)) return 'السبا والترفيه';
  return category;
@@ -173,6 +173,8 @@ function revisedEquipment(p,settings=preferences){
 
 const costLabels={rent:'إيجار المبنى',wages:'الرواتب والأجور والتعويضات',roomCost:'مستهلكات الغرف والتنظيف المتغير',servicesCost:'أغذية ومشروبات وتكلفة تقديم الخدمات',distribution:'عمولات توزيع الغرف',electricity:'الكهرباء',water:'المياه والصرف',repairs:'الصيانة الوقائية والعقود وقطع الغيار',insurance:'التأمين والتراخيص',admin:'الإدارة والأنظمة والاتصالات والنفايات',marketing:'المبيعات والتسويق',interest:'فوائد وتمويل',depreciation:'إهلاك الأصول',tax:'مخصص ضريبة أو زكاة مدخل'};
 const editableBudget=[
+ ['hallBookingsMonthly','قاعة الاجتماعات · حجوزات شهرية مخططة',0,60],
+ ['rooftopOrdersDaily','كافيه السطح · طلبات يومية مخططة',0,300],
  ['externalDemand','مؤشر الطلب الخارجي %',0,400],['baseKwh','كهرباء أساسية ك.و.س / م² / سنة',1,500],
  ['nightKwh','كهرباء إضافية ك.و.س / ليلة',0,150],['waterNight','مياه لتر / ليلة',0,3000],['waterBase','مياه مرافق م³ / يوم',0,1000],
  ['waterRate','مياه وصرف ر.س / م³',0,100],['maintenanceBasis','صيانة المعدات · نقطة أساس من التكلفة سنويًا',0,2500],

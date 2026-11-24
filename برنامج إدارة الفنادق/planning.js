@@ -59,7 +59,9 @@ const serviceCatalog = [
  ['المطعم الرئيسي','عشاء','وجبة',55,18,37,4],
  ['مقهى اللوبي','قهوة وحلويات','طلب',25,30,35,6],
  ['النقل والرحلات','نقل المطار باتجاه واحد','رحلة',230,3,65,0],
- ['النقل والرحلات','جولة سياحية محلية','جولة',480,2,70,0]
+ ['النقل والرحلات','جولة سياحية محلية','جولة',480,2,70,0],
+ ['القاعات','حجز قاعة اجتماعات','حجز',600,0,35,0],
+ ['كافيه السطح','طلب من كافيه السطح','طلب',30,0,40,0]
 ];
 const proposedServices = [
  ['قاعة الاجتماعات','التشغيل والسعة بانتظار التحقق'],
@@ -110,7 +112,7 @@ function profile(settings=preferences) {
 
 const anamStaffGroups=[
  ['الإدارة','الإدارة', [['مدير الفندق',1,8500]]],
- ['الاستقبال والحجز','مدير الفندق',[['موظف استقبال',4,4600]]],
+ ['الاستقبال والحجز','مدير الفندق',[['موظف استقبال سعودي',4,4600]]],
  ['التدبير والمغسلة','مدير الفندق',[['عامل غرف',6,2500]]],
  ['الأغذية والمشروبات','مدير الفندق',[['مقدم طعام',3,3000],['باريستا',2,3300]]],
  ['المطابخ','مدير الفندق',[['طاهٍ',2,4500],['مساعد تحضير',2,2800],['عامل غسيل أوانٍ',1,2400]]],
@@ -160,7 +162,8 @@ function forecast(p,offset,days,settings=preferences) {
  const services=serviceCatalog.filter(x=>serviceEnabled(x,p)).map(([category,name,unit,raw,attach,cost,external])=>{
    const fixedMonth=/شهر كشك/.test(unit);
    const monthlyBooking=/حجز/.test(unit)&&category==='القاعات';
-   const externalDemand=serviceExternal(category,external,p);
+   const externalDemand=category==='القاعات'?budgetInputs.hallBookingsMonthly:
+    category==='كافيه السطح'?budgetInputs.rooftopOrdersDaily:serviceExternal(category,external,p);
    const base=(fixedMonth||monthlyBooking?externalDemand*12/periodDays:externalDemand)+p.expectedGuests*attach/100;
    const price=Math.round((budgetInputs.servicePrices[name]??raw)*settings.priceIndex/100);
    const quantity=between(base,offset,days);
@@ -201,10 +204,13 @@ function sitePlanView(p) {
  ].join('')+'</div>'+
  panel('الموقع وتوزيع المبنى',row('الموقع',esc(p.location))+
   row('الأدوار','بدروم وستة أدوار وملحق')+row('الأرضي','استقبال ومطعم ومقهى')+
-  row('البدروم','مواقف وخدمات'))+
+  row('البدروم','مواقف وخدمات · قاعة اجتماعات مقترحة')+
+  row('وصف العقار في عقد الإيجار','42 وحدة عقارية تشمل استخدامات متعددة')+
+  row('فترة الإيجار','13 يناير 2024 إلى 30 أغسطس 2038')+
+  row('دورية الإيجار','دفعات نصف سنوية'))+
  displaySection('برنامج الوحدات',['النوع','العدد المخطط','السعة التقديرية للوحدة','سعر الليلة التخطيطي'],
   p.units.map(x=>[esc(x.name),pn(x.count),pn(x.beds),pm(x.price)]))+
- displaySection('خدمات قيد الدراسة',['الخدمة','الحالة'],proposedServices)+panel('افتراض تشغيل النقل والرحلات','<p>تتضمن الموازنة تكلفة تقديم الخدمة والمركبة والسائق ضمن تكلفة الرحلة. تُراجع تكاليف اقتناء المركبات ضمن الاستثمار عند اعتماد خيار الشراء.</p>')+classificationPanel();
+ displaySection('خدمات قيد الدراسة',['الخدمة','الحالة'],proposedServices)+panel('افتراض تشغيل النقل والرحلات','<p>تتضمن الموازنة تكلفة تقديم الخدمة والمركبة والسائق ضمن تكلفة الرحلة. يتضمن برنامج الخدمة سيارتين لنقل المطار وسيارتين كبيرتين للرحلات. تُراجع تكاليف اقتناء المركبات ضمن الاستثمار عند اعتماد خيار الشراء. تبدأ خطة القاعة وكافيه السطح بصفر طلبات، ويمكن تفعيل الإيراد من مدخلات التشغيل بعد تحديد السعة والجدوى.</p>')+classificationPanel();
 }
 
 
@@ -212,9 +218,9 @@ function staffingView(p) {
  const rows=staffing(p);
  const wages=total(rows,x=>x.monthly);
  const work=workloadTargets(p);
- return '<div class="cards">'+[card('الأقسام',pn(staffGroups.length)),card('المسميات الوظيفية',pn(rows.length)),card('قوة العمل',pn(total(rows,x=>x.count))),card('التعويض الشهري الكامل',pm(wages)),card('التعويض السنوي',pm(wages*12))].join('')+'</div>'+
+ return '<div class="cards">'+[card('الأقسام',pn(anamStaffGroups.length)),card('المسميات الوظيفية',pn(rows.length)),card('قوة العمل',pn(total(rows,x=>x.count))),card('التعويض الشهري الكامل',pm(wages)),card('التعويض السنوي',pm(wages*12))].join('')+'</div>'+
  panel('أساس تغطية التشغيل',row('الغرف المشغولة المخططة',pn(work.occupied))+row('الوجبات والتغطيات المتوقعة يوميًا',pn(work.covers))+row('المطاعم والمقهى',pn(p.restaurants)+' مطاعم ومقهى')+row('طهاة الخطوط قبل الشيفات والمساعدين',pn(work.cooks))+row('غرف المغادرة المتوقعة يوميًا',pn(work.departures)))+
- displaySection('ملخص الملاك الوظيفي حسب الإدارة',['الإدارة','الموظفون','الأساسي شهريًا','البدلات والحوافز والمنافع','إجمالي شهري','إجمالي سنوي'],staffGroups.map(([name])=>{
+ displaySection('ملخص الملاك الوظيفي حسب الإدارة',['الإدارة','الموظفون','الأساسي شهريًا','البدلات والحوافز والمنافع','إجمالي شهري','إجمالي سنوي'],anamStaffGroups.map(([name])=>{
    const r=rows.filter(x=>x.department===name);
    const monthly=total(r,x=>x.monthly);
    const base=total(r,x=>x.base*x.count);

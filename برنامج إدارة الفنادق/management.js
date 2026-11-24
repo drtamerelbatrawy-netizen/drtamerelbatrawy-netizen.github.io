@@ -117,6 +117,9 @@ function investmentPage(){
  return '<div class="heading"><div><h1>إجماليات الاستثمار والعائد</h1><p class="muted">'+esc(p.label)+' · موازنة '+pn(preferences.year)+'</p></div>'+
  action('go','تعديل مدخلات الاستثمار','control','primary')+'</div>'+
  controlCards([['إجمالي الاستثمار التقديري',pm(p.investmentEstimate)],['التمويل المستهدف',pm(p.fundingTarget)],['حصر البنود المدرجة',pm(base)],['تكلفة المتر المبني',pm(projectTotal/p.gross)],['تكلفة كل غرفة أو جناح',pm(projectTotal/p.keys)],['صافي الربح التخطيطي إلى الاستثمار',returnPercent(year.net,p.investmentEstimate)]])+
+ panel('حالة تقديرات الاستثمار',row('الفجوة بين الاستثمار والتمويل المستهدف',pm(projectTotal-p.fundingTarget))+
+ row('قيمة عقد أعمال التعديلات الموقع',pm(220000))+
+ '<p>يُراجع نطاق عقد التعديلات مقابل تسعير التهيئة لتجنب ازدواج الحصر. تشمل البنود التي تحتاج تسعيرًا مستقلًا تجهيزات المطعم والمقهى والقاعة والسطح والمركبات عند اعتماد الشراء، إلى جانب الافتتاح ورأس المال العامل.</p>')+
  displaySection('حصر التكلفة الاستثمارية',['البند','التكلفة','من إجمالي الحصر','لكل متر مبني','لكل غرفة'],value.rows.concat([['إجمالي الحصر',base]]).map(([label,n])=>[
   esc(label),pm(n),returnPercent(n,base),pm(n/p.gross),pm(n/p.keys)
  ]))+
