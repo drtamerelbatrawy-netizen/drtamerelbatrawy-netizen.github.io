@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>خريطة السياحة السعودية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="lib/leaflet.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4" stroke="currentColor" stroke-width="2"/></svg></div>
+    <div><h1>تليسكوب السوق السعودي</h1><p>خريطة المؤشرات السياحية التفاعلية</p></div>
+  </div>
+  <div class="search">
+    <input id="search" type="search" placeholder="ابحث عن منطقة أو محافظة أو مدينة…" autocomplete="off">
+    <ul id="searchRes" hidden></ul>
+  </div>
+  <div class="tools">
+    <div class="total"><span>سياح المملكة <b id="yearBadge"></b></span><strong id="kpiTotal"></strong></div>
+    <div class="total"><span>الإنفاق السياحي</span><strong id="kpiSpend"></strong></div>
+    <label class="metric">لون الخريطة حسب
+      <select id="metric"></select></label>
+    <button id="aboutBtn" class="btn ghost" title="المنهجية والمصادر">؟</button>
+  </div>
+</header>
+
+<main>
+  <div id="mapWrap">
+    <div id="map"></div>
+    <div id="hover" hidden></div>
+    <div id="legend" class="card"></div>
+    <div class="card basemaps">
+      <button data-basemap="none">بدون خلفية</button><button data-basemap="osm">شوارع</button><button data-basemap="light">فاتحة</button><button data-basemap="sat">قمر صناعي</button>
+    </div>
+    <ol class="card zoom-steps" title="المستوى المعروض يتغير بالتكبير">
+      <li data-m="region" data-z="5.5">المناطق</li><li data-m="gov" data-z="7.5">المحافظات</li><li data-m="city" data-z="10">المدن</li>
+    </ol>
+    <button id="panelToggle" class="btn">التفاصيل</button>
+  </div>
+  <aside id="panel" aria-live="polite"></aside>
+</main>
+
+<dialog id="about">
+  <h2>المنهجية والمصادر</h2>
+  <ul class="about">
+    <li><b>المصدر الرئيسي:</b> وزارة السياحة – التقرير الإحصائي السنوي 2025 (مسح السياحة المحلية ومسح الزوار الدوليين). أرقام المناطق الـ13 كلها رسمية: السياح المحليون وإنفاقهم، زيارات الوافدين وإنفاقهم، إجمالي الإنفاق، الوظائف، مرافق الضيافة والغرف، الإشغال، متوسط سعر الغرفة والعائد لكل غرفة متاحة.</li>
+    <li><b>المدن الرسمية 2025:</b> الرياض، مكة المكرمة، جدة، حاضرة الدمام (الدمام والخبر والظهران)، المدينة المنورة (سياح محليون وإنفاق).</li>
+    <li><b>المحافظات:</b> الوزارة لا تنشر أرقام 2025 للمحافظات. استخدمنا آخر حصص رسمية منشورة: تقرير 2023 (الطائف، الأحساء، أبها، بريدة) وإحصاءات 2021 للمحافظات الرئيسة (28 محافظة)، وطبقناها على أرقام المنطقة 2025. الباقي موزع حسب السكان. كل رقم عليه شارة توضح نوعه: <span class="tag off">رسمي</span> <span class="tag mid">مرجعي / حصة رسمية</span> <span class="tag est">تقدير</span>.</li>
+    <li><b>الوافدون والإيواء:</b> لا تُنشر لما دون المنطقة، فلم نقسّمها. في المحافظات والمدن تظهر قيمة المنطقة في مربع مظلل للاسترشاد، وعلى الخريطة يلوَّن كل جزء بلون منطقته.</li>
+    <li><b>بيانات الفنادق للمدن:</b> عدد الغرف (ربع 1 2026) والمرافق (يونيو 2026) والإشغال (النصف الأول 2024 و2025) لـ16 وجهة، كما نشرتها الصحف نقلاً عن وزارة السياحة.</li>
+    <li><b>الهيئة العامة للإحصاء:</b> إحصاءات المنشآت السياحية (الربع الثالث والرابع 2025)، الحج والعمرة.</li>
+    <li><b>السكان:</b> من برنامج الخريطة السكانية (تعداد 2022 × 2.5٪ سنوياً حتى 2025) لحساب «سياح لكل ساكن».</li>
+    <li><b>الحدود:</b> نفس حدود برنامج السكان؛ حدود المحافظات تقريبية إلى أن يُشغَّل <code>tools\update_governorates.bat</code>.</li>
+    <li><b>التحديث:</b> عند صدور تقرير الوزارة الجديد عدّل ملفات CSV في مجلد <code>build</code> ثم شغّل <code>python build\build_tourism.py</code> (انظر اقرأني).</li>
+  </ul>
+  <div class="actions"><button id="aboutClose" class="btn">إغلاق</button></div>
+</dialog>
+
+<script src="lib/leaflet.js"></script>
+<script src="data/units.js"></script>
+<script src="data/regions.js"></script>
+<script src="data/governorates.js"></script>
+<script src="data/cities.js"></script>
+<script src="data/tourism.js"></script>
+<script>document.write('<script src="data/governorates_official.js" onerror="this.remove()"><\/script>')</script>
+<script src="js/core.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
