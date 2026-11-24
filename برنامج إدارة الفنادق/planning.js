@@ -4,20 +4,22 @@ const planningTitles = {
   sitePlan:'التخطيط والتحليل المساحي',
   staffingPlan:'الهيكل والرواتب والتعويضات',
   equipmentPlan:'التجهيزات والأثاث والمفروشات',
-  constructionPlan:'التكاليف الإنشائية',
+  constructionPlan:'أعمال التهيئة والتشطيبات',
   servicePlan:'الخدمات والأسعار والمبيعات',
   feasibility:'المؤشرات والنتائج التشغيلية'
 };
+const anam = {
+ label:'فندق أنام للشقق الفندقية', location:'حي الحيلة الغربي · محايل عسير',
+ land:635, floors:6, parkingSpaces:7, elevators:2,
+ annualRent:350000, investmentEstimate:7500000, fundingTarget:5000000,
+ fitoutEstimate:570100, furnishingEstimate:756000
+};
 const scenarios = {
-  apartments:{label:'شقق إيوان الفندقية',land:4800,floors:6,rooms:[
-    ['شقة غرفة نوم',48,42,6,0,2,410],['شقة غرفتي نوم',24,61,8,5,4,630],['غرفة ضيافة',8,24,5,0,2,290]
-  ],halls:1,pool:0,landscape:430,parking:1450,roads:420,sports:0,utilities:240,guestsPerKey:215,accessible:5,averageStay:5,benchmark:0,roomBenchmark:'بحسب تكوين الوحدة'},
-  hotel:{label:'فندق إيوان · الرياض',land:14800,floors:7,rooms:[
-    ['قياسية',160,26,6,0,2,510],['جناح',36,43,9,4,3,790],['جناح تنفيذي',4,60,11,8,4,1190]
-  ], halls:3,restaurants:4,outlets:5,pool:465,landscape:2950,parking:5100,roads:1850,sports:620,utilities:700,guestsPerKey:175,accessible:8,averageStay:2.3,benchmark:85,roomBenchmark:'30–36'},
-  resort:{label:'منتجع إيوان',land:36400,floors:2,rooms:[
-    ['غرفة منتجع',82,40,9,8,2,680],['جناح منتجع',38,55,11,12,3,1040],['فيلا منتجع',20,86,16,18,5,1750]
-  ], halls:4,restaurants:4,outlets:5,pool:2600,landscape:10900,parking:2100,roads:4900,sports:2700,utilities:1850,guestsPerKey:220,accessible:7,averageStay:3,staffScale:1.7,benchmark:210,roomBenchmark:'55–80'}
+ apartments:{...anam,rooms:[
+  ['استوديو',5,26,4,0,2,170],['غرفة وصالة',20,44,5,0,2,230],
+  ['غرفتان وصالة',10,65,6,0,4,340],['جناح VIP',2,79,7,0,4,430]
+ ],halls:1,pool:0,landscape:0,parking:0,roads:0,sports:0,utilities:0,
+ guestsPerKey:220,averageStay:2.5}
 };
 const hsuLink='https://www.hotelstars.eu/fileadmin/Dateien/PORTAL_HSU/Kriterienkataloge/2024-04-24_HSU_classification_criteria_2025_-_2030.pdf';
 const hvsLink='https://hvs.com/StaticContent/9755/HVSWC-Navigating%20The%20Hospitality%20Investment%20Terrain-%20GCC%20development%20costs.pdf';
@@ -52,26 +54,19 @@ const staffGroups = [
 ];
 // Prices are planning assumptions in SAR. Each service uses one explicit demand driver.
 const serviceCatalog = [
- ['المطعم الرئيسي','بوفيه إفطار','ضيف',70,54,34,25], ['المطعم الرئيسي','غداء','وجبة',105,23,35,38], ['المطعم الرئيسي','عشاء','وجبة',140,28,36,35],
- ['مطعم التخصصات','وجبة حسب القائمة','وجبة',155,16,36,31],['مطعم المشويات','وجبة مشويات كاملة','وجبة',128,18,35,37],['خدمة الغرف','وجبة خدمة الغرف','وجبة',105,15,34,0],['مقهى اللوبي','قهوة وحلويات','طلب',38,43,34,32],
- ['مطعم المسبح','وجبة خفيفة','طلب',55,25,38,17],['المشروبات','عصائر ومشروبات باردة','طلب',24,33,30,18],
- ['الميني بار','مشتريات الميني بار','طلب',48,15,48,0],['المطبخ','تقديم طعام للاجتماع','غطاء',125,0,45,24],
- ['القاعات','قاعة اجتماعات نصف يوم','حجز',1800,0,20,12],['القاعات','قاعة مناسبات يوم كامل','حجز',4800,0,25,6],
- ['القاعات','صوتيات وشاشة','حجز',480,0,18,8],['خدمات الأعمال','طباعة واجتماع خاص','طلب',45,7,20,0],
- ['السبا','جلسة تدليك','جلسة',245,7,29,5],['السبا','جلسة ساونا','زيارة',90,7,21,8],
- ['العناية','حلاقة وتجميل','جلسة',110,4,39,4],['النادي','دخول يومي لغير المقيمين','زيارة',85,0,18,18],
- ['المسبح','تذكرة دخول لغير المقيمين','زيارة',95,0,25,18],['المسبح','حجز كابانا','حجز',225,4,19,5],
- ['الأنشطة','تنس أو ملعب','ساعة',120,6,19,6],['الأنشطة','نادي الأطفال','جلسة',65,6,25,4],
- ['الأنشطة','تأجير دراجات','ساعة',45,3,22,4],['الأنشطة','عرض ترفيهي','تذكرة',60,4,36,10],
- ['النقل','نقل المطار','رحلة',175,4,54,0],['النقل','رحلة محلية','رحلة',95,5,50,0],
- ['المغسلة','غسيل وكي باقة','طلب',65,7,31,0],['التجزئة','هدايا ومستلزمات','طلب',85,9,61,6],
- ['التجزئة','إيجار كشك تجاري','شهر كشك',4200,0,12,3],
- ['الشاطئ','دخول يومي لغير المقيمين','زيارة',130,0,27,22,true],['الشاطئ','تأجير معدات شاطئية','جلسة',120,9,31,10,true],
- ['الرحلات','رحلة بإشراف منظم','فرد',195,7,58,8,true],['المطاعم','تجربة عشاء شاطئي','وجبة',215,8,42,8,true],
- ['المنتجع','دخول شاطئ ومسبح للمقيم','زيارة مشمولة',0,55,0,0,true],['المسبح','دخول أساسي للمقيم','زيارة مشمولة',0,40,0,0]
+ ['المطعم الرئيسي','بوفيه إفطار','ضيف',32,35,35,4],
+ ['المطعم الرئيسي','غداء','وجبة',48,14,37,4],
+ ['المطعم الرئيسي','عشاء','وجبة',55,18,37,4],
+ ['مقهى اللوبي','قهوة وحلويات','طلب',25,30,35,6]
 ];
-const planStorage='iwan-feasibility-1';
-const preferences={scenario:'hotel',year:2027,month:1,occupancy:60,priceIndex:100,costIndex:100,buildIndex:100,equipmentIndex:100,...JSON.parse(localStorage.getItem(planStorage)||'{}')};
+const proposedServices = [
+ ['قاعة الاجتماعات','التشغيل والسعة بانتظار التحقق'],
+ ['كافيه السطح','توسعة مقترحة'],
+ ['نقل المطار','سيارتان مقترحتان'],
+ ['الرحلات السياحية','سيارتان كبيرتان مقترحتان']
+];
+const planStorage='anam-planning-1';
+const preferences={scenario:'apartments',year:2027,month:1,occupancy:60,priceIndex:100,costIndex:100,buildIndex:100,equipmentIndex:100,...JSON.parse(localStorage.getItem(planStorage)||'{}')};
 const total=(rows, project=x=>x)=>rows.reduce((sum,x,i)=>sum+project(x,i),0);
 const nearest=(value,step=10)=>Math.round(value/step)*step;
 
@@ -81,7 +76,7 @@ function profile(settings=preferences) {
  const keys=total(mix,x=>x[1]), ratio=keys/total(baseline.rooms,x=>x[1]);
  const venues=venuesFor(keys,settings.scenario);
  const source={...baseline,venues,outlets:venues.length,restaurants:venues.length-1};
- for(const key of ['land','pool','landscape','parking','roads','sports','utilities']) source[key]=Math.round(source[key]*ratio);
+ for(const key of ['pool','landscape','parking','roads','sports','utilities']) source[key]=Math.round(source[key]*ratio);
  const beds=total(mix,x=>x[1]*x[5]);
  const prices=settings.unitPrices?.[settings.scenario]||[];
  const units=mix.map(([name,count,net,bath,terrace,beds,price],i)=>({name,count,net,bath,terrace,beds,price:Math.round((prices[i]??price)*settings.priceIndex/100)}));
@@ -89,24 +84,19 @@ function profile(settings=preferences) {
  const terraceArea=total(units,x=>x.terrace*x.count);
  const isResort=settings.scenario==='resort';
  const isApartment=settings.scenario==='apartments';
- const scale=(isResort?1.38:isApartment?0.48:1)*ratio;
+ const scale=1;
  const layout=[
-  ['بهو واستقبال وأمتعة وكونسيرج',530,'خدمات الضيوف',4],
-  ['ممرات غرف وممرات خدمة وحركة رأسية',3050,'حركة رأسية وأفقية',source.floors],
-  ['قاعات واجتماعات وبهو تجهيز',1040,'خدمات الضيوف',source.halls],
-  [isApartment?'صالة نزلاء وخدمات إقامة ممتدة':'النادي والسبا وغرف تبديل',isApartment?360:860,'خدمات الضيوف',isApartment?2:6],
-  ['المطبخ المركزي والمخبز والتبريد والاستلام الغذائي',740,'خلفية وتشغيل',5],
-  ['خطوط إنهاء المطاعم وغسيل محلي',440,'خلفية وتشغيل',source.restaurants],
-  ['مغسلة ومخازن وتدبير',750,'خلفية وتشغيل',5],
-  ['إدارة ومرافق عاملين وأمن',690,'خلفية وتشغيل',8],
-  ['محطات ميكانيكية وكهرباء وتقنية',1090,'خلفية وتشغيل',7],
-  ['جدران وفراغات إنشائية',1270,'إنشائي',source.floors],
+  ['استقبال وبهو',65,'خدمات الضيوف',1],
+  ['ممرات وسلالم ومصاعد',295,'حركة رأسية وأفقية',source.floors],
+  ['مواقف وخدمات البدروم',380,'خلفية وتشغيل',1],
+  ['مخازن وتدبير وإدارة',95,'خلفية وتشغيل',1],
+  ['خدمات وجدران وفراغات إنشائية',175,'إنشائي',source.floors],
   ...venues.map(x=>[x.name,x.area,'خدمات الضيوف',1])
  ];
  const common=layout.map(([name,area,use,count])=>({name,area:Math.round(area*scale),use,count}));
  const commonArea=total(common,x=>x.area);
  const gross=guestArea+commonArea;
- const footprint=Math.ceil(gross/source.floors);
+ const footprint=380.8;
  const used=footprint+source.pool+source.landscape+source.parking+source.roads+source.sports+source.utilities;
  const exterior=[
   ['مبانٍ مسقوفة',footprint],['مسطحات حمامات السباحة',source.pool],['لاند سكيب وحدائق',source.landscape],['مواقف سيارات',source.parking],
@@ -116,19 +106,26 @@ function profile(settings=preferences) {
   expectedGuests:keys*settings.occupancy/100*source.guestsPerKey/100};
 }
 
+const anamStaffGroups=[
+ ['الإدارة','الإدارة', [['مدير الفندق',1,8500]]],
+ ['الاستقبال والحجز','مدير الفندق',[['موظف استقبال',4,4600]]],
+ ['التدبير والمغسلة','مدير الفندق',[['عامل غرف',6,2500]]],
+ ['الأغذية والمشروبات','مدير الفندق',[['مقدم طعام',3,3000],['باريستا',2,3300]]],
+ ['المطابخ','مدير الفندق',[['طاهٍ',2,4500],['مساعد تحضير',2,2800],['عامل غسيل أوانٍ',1,2400]]],
+ ['الصيانة','مدير الفندق',[['فني أعمال عامة',1,3800]]]
+];
 function staffing(p,settings=preferences) {
- const workload=workloadTargets(p,settings);
- return staffGroups.flatMap(([department,reports,basePositions])=>{
+ return anamStaffGroups.flatMap(([department,reports,basePositions])=>{
    const positions=p.isApartment?basePositions.filter(([title])=>!['معالج سبا','منقذ مسبح'].includes(title)):p.isResort&&department==='السبا والترفيه'?basePositions.concat(resortPositions):basePositions;
    return positions.map(([title,baseCount,reference],i)=>{
-   const count=sizedHeadcount(title,baseCount,p,workload);
+   const count=baseCount;
    const tier=i===0?'قيادة القسم':/مدير|مشرف|رئيس|شيف/.test(title)?'إشراف':'تشغيل وتخصص';
    const supervisor=positions.slice(1,i).reverse().find(([name])=>/مدير|مشرف|رئيس|شيف/.test(name));
-   const base=nearest((budgetInputs.salaryPrices[title]??wageAnchors[title]??reference)*settings.costIndex/100,1);
+   const base=nearest((budgetInputs.salaryPrices[title]??reference)*settings.costIndex/100,1);
    const housing=Math.round(base*0.15), transport=Math.round(base*0.08), incentive=Math.round(base*0.05);
    const benefits=420+Math.round(base*0.12);
    const person=base+housing+transport+incentive+benefits;
-      return {department,reports:i===0?reports:tier==='إشراف'?positions[0][0]:supervisor?.[0]||positions[0][0],level:tier,title,count,base,reference:wageAnchors[title]??reference,housing,transport,incentive,benefits,person,monthly:person*count};
+      return {department,reports:i===0?reports:tier==='إشراف'?positions[0][0]:supervisor?.[0]||positions[0][0],level:tier,title,count,base,reference,housing,transport,incentive,benefits,person,monthly:person*count};
   });
  });
 }
@@ -146,17 +143,7 @@ function construction(p,settings=preferences) {
   const reference=budgetInputs.constructionPrices[ref]??base;
   rows.push({packageName,scope,unit,qty,reference,ref,rate:Math.round(reference*(settings.buildIndex??100)*settings.costIndex/10000)});
  };
- const zones=[['الإقامة',p.guestArea],...['خدمات الضيوف','خلفية وتشغيل','حركة رأسية وأفقية','إنشائي'].map(name=>[name,total(p.common.filter(x=>x.use===name),x=>x.area)])];
- for(const [scope,qty] of zones) for(const [name,hotel,resort] of constructionTrades) push(name,scope,'م²',qty,Math.round((p.isResort?resort:hotel)*(p.isResort?2.4:2.55)));
- push('بلاطات وعزل وتكسية','تراسات الغرف','م²',p.terraceArea,p.isResort?850:680);
- push('مصاعد نزلاء وخدمة','الربط الرأسي','مصعد',p.isApartment?2:p.isResort?6:5,385000);
- push('تبليط ومراوح وشبكات','المواقف','م²',p.parking,235);
- push('أسفلت وأرصفة وتصريف','طرق وممرات الموقع','م²',p.roads,335);
- push('تربة وزراعة وري وإنارة','اللاند سكيب','م²',p.landscape,270);
- push('أحواض وعزل وترشيح','حمامات السباحة','م²',p.pool,2300);
- push('تسوية وأرضيات وإضاءة','الملاعب','م²',p.sports,510);
- push('بوابات وأسوار وتمديدات','مرافق الموقع','م²',p.utilities,860);
- push('شبكة معالجة وربط خدمات','بنية تحتية','حزمة',p.isResort?3:1,390000);
+ push('تعديلات وتشطيبات وتجهيزات ثابتة','المبنى القائم','حزمة',1,anam.fitoutEstimate);
  return rows;
 }
 const calendarMonths=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -206,36 +193,19 @@ function planningControls() {
 }
 
 function sitePlanView(p) {
- const refs=planningReference.referenceRooms.map(([level,...ratios],i)=>[(5-i)+' نجوم',...ratios.map(value=>pn(Number(value.replace(',','.'))))]);
- const benchmark='<p>تعتمد المقارنة على مساحة الغرفة وحمامها، وعلى إجمالي المسطح المبني لكل مفتاح. حصة الفرد المرجعية ناتجة من قسمة مؤشر المفتاح على سعة النموذج. مؤشرات الأرض واللاند سكيب والمواقف والممرات محسوبة من تصميم السيناريو وتصلح للمقارنة بين الفندق والمنتجع.</p>'+
-  '<p><a href="'+hsuLink+'" target="_blank" rel="noopener">Hotelstars Union · 2025–2030</a> · <a href="'+hvsLink+'" target="_blank" rel="noopener">HVS · مؤشرات التطوير الخليجي</a> · <a href="'+adaLink+'" target="_blank" rel="noopener">ADA · القسم 224</a></p>'+
-  table(['المؤشر','النموذج','المرجع','القراءة'],[
-   ['المبني لكل مفتاح',asArea(p.gross/p.keys),asArea(p.benchmark),(p.gross/p.keys>=p.benchmark?'أعلى':'أقل')+' من القيمة المرجعية'],
-   ['المبني لكل ضيف عند الطاقة الكاملة',asArea(p.gross/p.beds),asArea(p.benchmark/(p.beds/p.keys)),'القيمتان على أساس عدد الأسرّة في النموذج'],
-   ['الغرفة الأساسية مع الحمام',asArea(p.units[0].net+p.units[0].bath),p.roomBenchmark+' م²','النطاق النموذجي لدى HVS لفئة '+(p.isResort?'المنتجع الفاخر':'الفندق الراقي')],
-   ['مساحة الغرفة مع الحمام',p.units.map(x=>asArea(x.net+x.bath)).join(' / '),'14 / 18 / 22 / 30 م²','درجات مساحة في كتالوج Hotelstars Union'],
-   ['الوحدات المهيأة للحركة',pn(p.accessible),p.keys<=100?'5':p.keys<=150?'7':'8','مقارنة تخطيطية بجدول ADA الأمريكي']
-  ]);
- return '<div class="cards">'+[card('مساحة الأرض',asArea(p.land)),card('إجمالي المسطح المبني',asArea(p.gross)),card('طاقة الإيواء التصميمية',pn(p.beds)+' ضيف'),card('تغطية المباني للأرض',percent(p.footprint/p.land*100))].join('')+'</div>'+
-  displaySection('استخدام الأرض والمرافق الخارجية',['الاستخدام','المساحة','نسبة الأرض','م² لكل ضيف تصميمي','م² لكل ضيف متوقع'],p.exterior.map(([name,area])=>[name,asArea(area),percent(area/p.land*100),pn(area/p.beds),pn(area/p.expectedGuests)]))+
-  displaySection('مساحة وحدات الضيافة ومرافقها',['النوع','عدد الوحدات','الصافي / وحدة','الحمام','التراس','الداخلي / وحدة','المشتركات / وحدة','الشامل / وحدة','سعة الوحدة','شامل م² / ضيف','إجمالي الداخلي','سعر الليلة'],p.units.map(x=>[x.name,pn(x.count),asArea(x.net),asArea(x.bath),asArea(x.terrace),asArea(x.net+x.bath),asArea(p.commonArea/p.keys),asArea(sumArea(p,x)),pn(x.beds),pn(sumArea(p,x)/x.beds),asArea(x.count*(x.net+x.bath)),pm(x.price)]))+
-  displaySection('الفراغات المبنية المشتركة والممرات والخدمات',['الفراغ','التصنيف','عدد الفراغات','المسطح الإجمالي','حصة المبني','م² / مفتاح','م² / ضيف تصميمي','م² / ضيف متوقع'],p.common.map(x=>[esc(x.name),x.use,pn(x.count),asArea(x.area),percent(x.area/p.gross*100),pn(x.area/p.keys),pn(x.area/p.beds),pn(x.area/p.expectedGuests)]))+
-  (p.isApartment?'':panel('مقارنة تخطيطية دولية',benchmark))+
-  displaySection('مؤشرات محلية واردة في الدراسة الفنية',['الفئة','غرفة وحمام','صالة الطعام','صالون وخدمة','المطابخ','ممرات وسلالم','خدمات وإنشائية','إجمالي م² / غرفة'],refs)+
-  localReferenceView(p)+panel('أساس القياس','<p>المسطح المبني المغلق يجمع الوحدة الداخلية والمشتركات. التراس ظاهر في المساحة الشاملة للغرفة وبند إنشائي مستقل. البصمة التقديرية = المسطح المغلق مقسومًا على '+pn(p.floors)+' طوابق مكافئة. عمود الضيف المتوقع يستخدم إشغال '+percent(preferences.occupancy)+' ومتوسط '+pn(p.guestsPerKey)+' ضيفًا لكل 100 وحدة مشغولة. حصة المرافق للمقارنة موزعة بالتساوي على المفاتيح.</p>');
+ return '<div class="cards">'+[
+  card('مساحة الأرض',asArea(p.land)),card('وحدات الضيافة المخططة',pn(p.keys)),
+  card('المواقف المخططة',pn(p.parkingSpaces)),card('المصاعد',pn(p.elevators))
+ ].join('')+'</div>'+
+ panel('الموقع وتوزيع المبنى',row('الموقع',esc(p.location))+
+  row('الأدوار','بدروم وستة أدوار وملحق')+row('الأرضي','استقبال ومطعم ومقهى')+
+  row('البدروم','مواقف وخدمات'))+
+ displaySection('برنامج الوحدات',['النوع','العدد المخطط','السعة التقديرية للوحدة','سعر الليلة التخطيطي'],
+  p.units.map(x=>[esc(x.name),pn(x.count),pn(x.beds),pm(x.price)]))+
+ displaySection('خدمات قيد الدراسة',['الخدمة','الحالة'],proposedServices)+classificationPanel();
 }
 
-function localReferenceView(p) {
- if(p.isApartment) return classificationPanel()+panel('برنامج الشقة الفندقية','<p>تشمل الشقة مساحة معيشة ومطبخًا أو مطبخًا صغيرًا وغرفة نوم أو أكثر وحمامًا. يتضمن نموذج إيوان أيضًا غرف ضيافة منفصلة ضمن النسبة المتبقية.</p>');
- if(p.isResort) {
-   return displaySection('خط أساس توزيع الأرض في الدراسة الفنية',['الاستخدام في المرجع','نسبة أرض المرجع','م² في المشروع المرجعي'],
-     planningReference.resortLand.map(([name,ratio,area])=>[esc(name),esc(ratio),esc(area)]))+
-     panel('مقياس مشروع المرجع','<p>الدراسة الفنية تعرض موقعًا أصليًا من 272,600 م² داخل حدوده، وتفصل مساحة الطريق الخارجي البالغة 40,000 م². سيناريو إيوان يستخدم منتجع ضيافة أصغر؛ وحدات البيع السكنية في المرجع مستقلة عن ليالي الإقامة.</p>');
- }
- return displaySection('خط أساس وحدات الضيافة في Book1',['النوع المرجعي','الوحدات','صافي م² / وحدة','شامل م² / وحدة','إجمالي م²'],
-   planningReference.hotelRooms.map(([name,gross,shared,net,mix,beds,count,area])=>[esc(name),pn(count),pn(net),pn(gross),pn(area)]))+
-   panel('مقياس مشروع المرجع','<p>Book1 يعرض أرضًا من 3,150 م² ومسطحًا مبنيًا من 4,788 م² ومخزونًا من 70 وحدة. يعرض إيوان برنامجًا مكانيًا مستقلًا لـ200 غرفة وجناح وأربعة مطاعم. تستخدم المقارنة مخزون المرجع ومساحته للسياق فقط.</p>');
-}
+
 function staffingView(p) {
  const rows=staffing(p);
  const wages=total(rows,x=>x.monthly);
@@ -258,12 +228,12 @@ function equipmentView(p) {
   const r=rows.filter(x=>x.zone===zone);
   return [esc(zone),pn(r.length),pn(total(r,x=>x.quantity)),pm(total(r,x=>x.quantity*x.price))];
  }))+panel('الحصر التفصيلي القابل للبحث','<label>ابحث في الأصناف والأقسام<input type="search" id="plan-equipment-search" placeholder="مثل أثاث أو مطبخ"></label><div id="plan-equipment-results">'+equipmentTable(rows)+'</div>')+
- panel('تقدير الأسعار والكميات','<p>الحصر مبني على برنامج الفندق والطاقة والوظيفة. الرصد المعلن من قوائم الموردين بالسعودية وعولج في النموذج لموازنة صافية قبل الضريبة. المقارن السوقي يؤسس تقديرًا لصنف مشابه، والبنود المخصصة تحتاج عرض توريد وتركيب. يشتق تعديل السعر الأساسي أثره على قيمة التجهيزات والإهلاك ومخصص الصيانة. أنظمة المبنى الثابتة ضمن الإنشاءات.</p>');
+ panel('تقدير الأسعار والكميات','<p>يشمل الحصر تأثيث الوحدات وتجهيز مطابخها. يؤثر تعديل الأسعار في موازنة التأثيث والإهلاك ومخصص الصيانة. تُقدّر تجهيزات المطعم والمقهى وبنود الافتتاح عند استكمال الحصر.</p>');
 }
 function equipmentTable(rows) {
- return table(['الموقع','الصنف','الكمية','السعر المعلن شامل الضريبة','سعر الوحدة للميزانية','الإجمالي','درجة التحقق','المصدر','الإجراء'],rows.map(x=>[
+ return table(['الموقع','الصنف','الكمية','السعر المعلن شامل الضريبة','سعر الوحدة للموازنة','الإجمالي','درجة التحقق','المصدر','الإجراء'],rows.map(x=>[
   esc(x.zone),esc(x.name),pn(x.quantity),x.listPrice?pm(x.listPrice):'حسب التوريد',pm(x.price),pm(x.price*x.quantity),badge(x.status,x.status==='يتطلب عرض توريد'),
-  '<a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.source)+'</a>',
+  x.url?'<a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.source)+'</a>':esc(x.source),
   budgetButton('equipmentPrices',x.sku,budgetInputs.equipmentPrices[x.sku]??Math.round(x.price*10000/(preferences.costIndex*preferences.equipmentIndex)))
  ]));
 }
@@ -272,13 +242,13 @@ function constructionView(p) {
  const direct=total(rows,x=>x.qty*x.rate);
  const {design:soft,contingency:reserve}=investment(p);
  const constructionCost=direct+soft+reserve;
- return '<div class="cards">'+[card('الأعمال المباشرة',pm(direct)),card('هندسة وإشراف',pm(soft)),card('احتياطي',pm(reserve)),card('إجمالي موازنة الإنشاء',pm(constructionCost))].join('')+'</div>'+
+ return '<div class="cards">'+[card('الأعمال المباشرة',pm(direct)),card('هندسة وإشراف',pm(soft)),card('احتياطي',pm(reserve)),card('إجمالي موازنة التهيئة',pm(constructionCost))].join('')+'</div>'+
  displaySection('ملخص التكلفة الإنشائية حسب الموقع',['الموقع','عدد الأعمال','تكلفة الأعمال المباشرة'],Array.from(new Set(rows.map(x=>x.scope))).map(scope=>{
   const inScope=rows.filter(x=>x.scope===scope);
   return [scope,pn(inScope.length),pm(total(inScope,x=>x.qty*x.rate))];
  }))+displaySection('بنود الكميات والأسعار للمباني والموقع',['الموقع','البند','الوحدة','الكمية','سعر الوحدة','الإجمالي','الموازنة'],rows.map(x=>[x.scope,x.packageName,x.unit,pn(x.qty),pm(x.rate),pm(x.qty*x.rate),budgetButton('constructionPrices',x.ref,x.reference)]))+
  panel('حدود الموازنة',row('إجمالي الإنشاء لكل مفتاح',pm(constructionCost/p.keys))+row('إجمالي الإنشاء والتجهيزات',pm(constructionCost+total(equipment(p),x=>x.quantity*x.price)))+
- '<p>أسعار الحزم تقديرات أولية بمرجع سوقي خليجي ومقارنة البناء في الرياض. فروق المواصفات والموقع والمناقصات تحتاج تسعير مقاول. يضاف الإشراف والاحتياطي من إعدادات لوحة التحكم. تظهر الأرض والافتتاح ورأس المال العامل في إجماليات الاستثمار.</p><p>'+sourceLink('hvs')+' · '+sourceLink('build')+'</p>');
+ '<p>الموازنة تخص تهيئة المبنى القائم. تخضع للتسوية بعد حصر الأعمال المنفذة والمتبقية.</p>');
 }
 function periodFor(p) {
  const year=preferences.year, month=preferences.month, offsets=monthOffsets(year);
@@ -334,7 +304,7 @@ document.addEventListener('click',event=>{
  const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
  const link=document.createElement('a');
  link.href=url;
- link.download='iwan-plan-'+preferences.scenario+'-'+preferences.year+'.json';
+ link.download='anam-plan-'+preferences.scenario+'-'+preferences.year+'.json';
  link.click();
  setTimeout(()=>URL.revokeObjectURL(url),1000);
 });

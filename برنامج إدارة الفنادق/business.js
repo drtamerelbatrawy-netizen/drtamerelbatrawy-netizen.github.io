@@ -1,19 +1,14 @@
 'use strict';
 
-const hotelOutlets=[
- {name:'المطعم الرئيسي',seats:140,hours:15,kitchen:'خط رئيسي ومطبخ إنتاج مشترك',area:320},
- {name:'مطعم التخصصات',seats:64,hours:8,kitchen:'مطبخ إنهاء مستقل',area:165},
- {name:'مطعم المشويات',seats:56,hours:8,kitchen:'خط شواء وإنهاء مستقل',area:155},
- {name:'مطعم المسبح',seats:48,hours:8,kitchen:'خط وجبات خفيفة مستقل',area:130},
- {name:'مقهى اللوبي',seats:42,hours:13,kitchen:'بار تحضير وبدون مطبخ ساخن كامل',area:110}
-];
-function venuesFor(keys,scenario){
- if(scenario==='apartments') return [hotelOutlets[0],hotelOutlets.at(-1)];
- const count=scenario==='resort'?4:keys>=200?4:keys>=150?3:keys>=100?2:1;
- return hotelOutlets.slice(0,count).concat(hotelOutlets.at(-1));
+function venuesFor(){
+ return [
+  {name:'المطعم الرئيسي',seats:32,hours:12,kitchen:'مطبخ المطعم',area:130},
+  {name:'مقهى اللوبي',seats:18,hours:12,kitchen:'بار تحضير',area:55}
+ ];
 }
+
 function serviceEnabled(service,p){
- return (!p.isApartment||!['السبا','العناية','المسبح','الشاطئ','الرحلات'].includes(service[0]))&&(!service[7]||p.isResort)&&(!hotelOutlets.some(v=>v.name===service[0])||p.venues.some(v=>v.name===service[0]));
+ return (!p.isApartment||!['السبا','العناية','المسبح','الشاطئ','الرحلات'].includes(service[0]))&&(!service[7]||p.isResort);
 }
 const hospitalitySources={
  oven:['Rational iCombi Pro 10-1/1 · إكويب','https://www.ekuep.com/ar/Rational'],
@@ -118,8 +113,8 @@ const procurement = [
  ['IT-12','النظافة والمخازن','مكنسة ساحة وآلة غسيل أرضيات',38500,'central',2],
  ['IT-13','الحدائق','جزازة ومعدات ري مستخدمة في الصيانة',24500,'central',1]
 ];
-const budgetDefaults={externalDemand:100,baseKwh:195,nightKwh:27,waterNight:260,waterBase:16,waterRate:9,maintenanceBasis:200,insuranceBasis:45,adminMonthly:38000,marketingBasis:180,interestYear:0,taxYear:0,equipmentPrices:{},servicePrices:{},salaryPrices:{},constructionPrices:{}};
-const modelStorage='iwan-model-200-1';
+const budgetDefaults={externalDemand:100,baseKwh:90,nightKwh:27,waterNight:260,waterBase:4,waterRate:9,maintenanceBasis:200,insuranceBasis:45,adminMonthly:6500,marketingBasis:180,interestYear:0,taxYear:0,equipmentPrices:{},servicePrices:{},salaryPrices:{},constructionPrices:{}};
+const modelStorage='anam-model-1';
 const budgetInputs={...budgetDefaults,...JSON.parse(localStorage.getItem(modelStorage)||'{}')};
 const foodTypes=new Set(['المطعم الرئيسي','مطعم التخصصات','مطعم المشويات','مقهى اللوبي','مطعم المسبح','المشروبات','الميني بار','المطبخ','خدمة الغرف','المطاعم']);
 const foodCovers=new Set(['بوفيه إفطار','غداء','عشاء','وجبة حسب القائمة','وجبة مشويات كاملة','وجبة خفيفة','قهوة وحلويات','تقديم طعام للاجتماع','وجبة خدمة الغرف','تجربة عشاء شاطئي']);
@@ -161,22 +156,22 @@ function sizedHeadcount(title,base,p,w){
  return rated[title]??(base===1?1:Math.ceil(base*Math.max(1,p.keys/145)));
 }
 function revisedEquipment(p,settings=preferences){
- const bases={keys:p.keys,outlets:p.outlets,restaurants:p.restaurants,halls:p.halls,central:p.isResort?1.2:1,seats:total(p.venues,x=>x.seats),suites:p.keys-p.units[0].count,
- poolSeats:p.isResort?95:55,employees:total(staffing(p,settings),x=>x.count)};
- const applicable=procurement.filter(([,zone])=>!p.isApartment||!['السبا','المسبح','خطوط الإنهاء'].includes(zone));
- const kitchen=[['APT-KIT','الشقق','تجهيز مطبخ الشقة وأجهزة الطهي والتبريد وأدواتها',7800,'apartments',1]];
- bases.apartments=p.isApartment?p.units[0].count+p.units[1].count:0;
- return applicable.concat(p.isApartment?kitchen:[]).map(([sku,zone,name,raw,basis,ratio,ref,status])=>{
-  const source=hospitalitySources[ref]||hospitalitySources.hvs;
+ const packages=[
+  ['BED','أطقم غرف النوم',43,5850],['KIT','مطابخ وتجهيزات',35,6650],
+  ['CUR-L','ستائر كبيرة',43,1550],['CUR-S','ستائر صغيرة',17,1150],
+  ['TV','وحدات تلفاز وصالة',35,1000],['SOFA-S','كنب مفرد',10,1800],
+  ['SOFA-D','كنب ثنائي',25,2500],['TABLE','طاولات وسط وجانبية',35,1250],
+  ['CHAIR','كراسي مفردة',35,750]
+ ];
+ return packages.map(([sku,name,quantity,reference])=>{
   const edited=budgetInputs.equipmentPrices[sku];
-  const listed=status==='listed';
-  const base=edited??(listed?Math.round(raw*100/115):raw);
-  return {sku,zone,category:zone,name,quantity:Math.ceil(bases[basis]*ratio),price:Math.round(base*settings.costIndex*(settings.equipmentIndex??100)/10000),
-   status:edited?'سعر مدخل للمشروع':listed?'رصد سعر معلن':ref?'تقدير بمقارن':'يتطلب عرض توريد',listPrice:listed?raw:0,source:source[0],url:source[1]};
+  const price=Math.round((edited??reference)*settings.costIndex*(settings.equipmentIndex??100)/10000);
+  return {sku,zone:'تأثيث الوحدات',category:'تأثيث الوحدات',name,quantity,price,
+   status:edited?'سعر مدخل':'تقدير التوريد',listPrice:0,source:'موازنة التأثيث'};
  });
 }
 
-const costLabels={wages:'الرواتب والأجور والتعويضات',roomCost:'مستهلكات الغرف والتنظيف المتغير',servicesCost:'أغذية ومشروبات وتكلفة تقديم الخدمات',distribution:'عمولات توزيع الغرف',electricity:'الكهرباء',water:'المياه والصرف',repairs:'الصيانة الوقائية والعقود وقطع الغيار',insurance:'التأمين والتراخيص',admin:'الإدارة والأنظمة والاتصالات والنفايات',marketing:'المبيعات والتسويق',interest:'فوائد وتمويل',depreciation:'إهلاك الأصول',tax:'مخصص ضريبة أو زكاة مدخل'};
+const costLabels={rent:'إيجار المبنى',wages:'الرواتب والأجور والتعويضات',roomCost:'مستهلكات الغرف والتنظيف المتغير',servicesCost:'أغذية ومشروبات وتكلفة تقديم الخدمات',distribution:'عمولات توزيع الغرف',electricity:'الكهرباء',water:'المياه والصرف',repairs:'الصيانة الوقائية والعقود وقطع الغيار',insurance:'التأمين والتراخيص',admin:'الإدارة والأنظمة والاتصالات والنفايات',marketing:'المبيعات والتسويق',interest:'فوائد وتمويل',depreciation:'إهلاك الأصول',tax:'مخصص ضريبة أو زكاة مدخل'};
 const editableBudget=[
  ['externalDemand','مؤشر الطلب الخارجي %',0,400],['baseKwh','كهرباء أساسية ك.و.س / م² / سنة',1,500],
  ['nightKwh','كهرباء إضافية ك.و.س / ليلة',0,150],['waterNight','مياه لتر / ليلة',0,3000],['waterBase','مياه مرافق م³ / يوم',0,1000],
@@ -212,17 +207,18 @@ function detailedOperatingCosts(p,offset,days,settings,{sold,revenue,roomCost,se
  const waterVariable=rooms=>Math.round(rooms*budgetInputs.waterNight*budgetInputs.waterRate/1000);
  const water=accrued(budgetInputs.waterBase*budgetInputs.waterRate*yearDays)+waterVariable(priorSold+sold)-waterVariable(priorSold);
  const repairs=accrued(capital.eq*budgetInputs.maintenanceBasis/10000+capital.build*0.006);
- const insurance=accrued(capital.build*budgetInputs.insuranceBasis/10000+45000);
- const admin=accrued(budgetInputs.adminMonthly*12+125000);
+ const insurance=accrued(capital.build*budgetInputs.insuranceBasis/10000+12000);
+ const admin=accrued(budgetInputs.adminMonthly*12);
+ const rent=accrued(p.annualRent);
  // Multiplication before rounding keeps projected totals equal when slicing the period.
  const marketing=revenue*budgetInputs.marketingBasis/10000;
- const costs={wages,roomCost,servicesCost,distribution,electricity,water,repairs,insurance,admin,marketing};
+ const costs={wages,roomCost,servicesCost,distribution,electricity,water,repairs,insurance,admin,marketing,rent};
  const operating=total(Object.values(costs));
  const depreciation=accrued(capital.build/35+capital.eq/7);
  const interest=accrued(budgetInputs.interestYear);
  const tax=accrued(budgetInputs.taxYear);
  const gop=revenue-operating;
- return {costs,operating,gop,overhead:electricity+water+repairs+insurance+admin+marketing,depreciation,interest,tax,net:gop-depreciation-interest-tax,
+ return {costs,operating,gop,overhead:electricity+water+repairs+insurance+admin+marketing+rent,depreciation,interest,tax,net:gop-depreciation-interest-tax,
   roomNetCost:roomCost,capital};
 }
 function departmentalBudget(p,f,settings=preferences){

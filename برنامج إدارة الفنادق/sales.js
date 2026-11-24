@@ -184,7 +184,7 @@ function salesChannelsView() {
  return controlCards([['حجوزات ملغاة',pn(state.bookings.filter(x=>x.status==='ملغى').length)],['وصول مثبت اليوم',pn(state.bookings.filter(b=>active(b)&&b.start===state.day).length)],['نطاق البيان',esc(month[0].slice(0,7))]])+
  displaySection('التوزيع والحجوزات واقتصاد القناة',['القناة','رمز السعر','الحجوزات في السجل','المقيمون','إيراد غرف مرحّل اليوم','مزيج التخطيط','العمولة','سعر القياسية في يوم العرض','الصافي','الشروط'],results)+
  displaySection('الطلب المؤكد خلال 30 يومًا',['القناة','حجوزات مفتوحة في السجل','ليال محجوزة خلال الأفق'],sold)+
- panel('عقود القنوات ومفاتيح الربط','<p>يضبط العقد المعتمد معامل السعر والعمولة في عروض الحجز إذا طابق رمزه إحدى خطط البيع أعلاه. يعكس التوافر سجل إيوان، وتحتاج المزامنة الفعلية إلى ربط مزود القناة.</p>'+action('new','إضافة عقد قناة')+generic('channels'))+
+ panel('عقود القنوات ومفاتيح الربط','<p>يضبط العقد المعتمد معامل السعر والعمولة في عروض الحجز إذا طابق رمزه إحدى خطط البيع أعلاه. يعكس التوافر سجل فندق أنام، وتحتاج المزامنة الفعلية إلى ربط مزود القناة.</p>'+action('new','إضافة عقد قناة')+generic('channels'))+
  action('go','فتح الأسعار والإيرادات','rates')+action('go','فتح الحجوزات','bookings');
 }
 function classifySource(value='') {
@@ -228,14 +228,14 @@ function salesShortcut(name) {
  if(price===undefined) return 'خارج نطاق الخدمات لهذا النوع';
  return esc(name)+' · '+pm(price)+controlAction('serviceSale','فتح البيع',name);
 }
-const venueSpaces=()=>[['قاعة 1',120],['قاعة 2',70],['قاعة 3',32],['قاعة 4',60]].slice(0,controlProfile().halls);
+const venueSpaces=()=>[['قاعة الاجتماعات','قيد التحقق'],['قاعة 2',70],['قاعة 3',32],['قاعة 4',60]].slice(0,controlProfile().halls);
 const resortSpaces=[['غرفة علاج 1',1],['غرفة علاج 2',1],['المسبح',35],['نادي الأطفال',12],['الملعب',8],['نادي اللياقة',18]];
 function salesEventsView() {
  const rows=state.events.filter(x=>x.end.slice(0,10)>=state.day&&x.status==='مؤكد');
  const upcoming=total(rows,x=>x.rooms);
  const reservationsFor=id=>state.bookings.filter(b=>b.eventId===id&&active(b));
  return controlCards([['القاعات',pn(venueSpaces().length)],['فعاليات مؤكدة قائمة',pn(rows.length)],['حصص غرف في العقود القائمة',pn(upcoming)]])+
- displaySection('سعة القاعات والتشغيل',['القاعة','سعة تصميمية للعرض','فعاليات قادمة مؤكدة'],venueSpaces().map(([name,seats])=>[name,pn(seats),pn(rows.filter(x=>x.hall===name).length)]))+
+ displaySection('سعة القاعات والتشغيل',['القاعة','السعة التشغيلية','فعاليات قادمة مؤكدة'],venueSpaces().map(([name,seats])=>[name,esc(seats),pn(rows.filter(x=>x.hall===name).length)]))+
  panel('باقات القاعات والمبيعات المرتبطة',choose('ops-role','دور المحاكاة',dutyRoles.map(x=>[x,x]),controller)+
  ['قاعة اجتماعات نصف يوم','قاعة مناسبات يوم كامل','تقديم طعام للاجتماع','صوتيات وشاشة'].map(x=>row(x,salesShortcut(x))).join(''))+
  displaySection('تخصيص غرف المجموعات',['الفعالية','الحصة المتعاقد عليها','حجوزات مرتبطة','متبقي التخصيص'],rows.map(x=>[esc(x.title),pn(x.rooms),pn(reservationsFor(x.id).length),pn(Math.max(0,x.rooms-reservationsFor(x.id).length))]))+

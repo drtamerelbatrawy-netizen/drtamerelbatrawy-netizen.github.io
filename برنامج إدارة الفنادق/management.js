@@ -61,10 +61,10 @@ function updateRoomInventory(records,mix){
  return {rooms:kept,retiredRooms:retired};
 }
 const capitalInputs=[
- ['landCost','تكلفة شراء الأرض'],['startupCost','ما قبل الافتتاح والتدريب والتجهيز الأولي'],['workingCapital','رأس المال العامل الابتدائي'],
+ ['startupCost','ما قبل الافتتاح والتدريب والتجهيز الأولي'],['workingCapital','رأس المال العامل الابتدائي'],
  ['designPercent','نسبة التصميم والإشراف %'],['reservePercent','نسبة الاحتياطي الإنشائي %']
 ];
-const capitalSettings={landCost:0,startupCost:3000000,workingCapital:4500000,designPercent:8,reservePercent:10};
+const capitalSettings={landCost:0,startupCost:0,workingCapital:0,designPercent:0,reservePercent:0};
 function capitalSetting(settings,key){
  return settings.capitalByProperty?.[settings.scenario]?.[key]??(settings.scenario==='hotel'?settings[key]:undefined)??capitalSettings[key];
 }
@@ -78,30 +78,30 @@ function investment(p,settings=preferences){
  const contingency=Math.round(base.build*capitalSetting(settings,'reservePercent')/100);
  const equipmentRows=equipment(p,settings);
  const rows=[
-  ['الأعمال الإنشائية والموقع والأنظمة الثابتة',base.build],['الهندسة والإشراف',design],['احتياطي الأعمال الإنشائية',contingency],
+  ['تهيئة المبنى والتشطيبات والأنظمة الثابتة',base.build],['الهندسة والإشراف',design],['احتياطي الأعمال الإنشائية',contingency],
   ...Array.from(new Set(equipmentRows.map(x=>x.zone))).map(zone=>['تجهيز · '+zone,total(equipmentRows.filter(x=>x.zone===zone),x=>x.quantity*x.price)]),
-  ['شراء الأرض',capitalSetting(settings,'landCost')],['تكاليف ما قبل الافتتاح',capitalSetting(settings,'startupCost')],['رأس المال العامل الابتدائي',capitalSetting(settings,'workingCapital')]
+  ['تكاليف ما قبل الافتتاح',capitalSetting(settings,'startupCost')],['رأس المال العامل الابتدائي',capitalSetting(settings,'workingCapital')]
  ];
  return {base,design,contingency,rows,total:total(rows,x=>x[1])};
 }
 const returnPercent=(n,d)=>d?percent(n*100/d):'بانتظار مدخل';
 function investmentPage(){
  const p=profile(), value=investment(p), year=forecast(p,0,daysInYear(preferences.year));
- const base=value.total;
+ const base=value.total, projectTotal=p.investmentEstimate;
  const margin=[
  ['إيرادات الغرف',year.roomRevenue],['إجمالي إيرادات المنشأة',year.revenue],['مجمل ربح الأقسام',year.revenue-year.wages-year.roomCost-year.servicesCost-year.distribution],
  ['الربح التشغيلي GOP',year.gop],['صافي الربح بعد المدخلات',year.net]
  ];
  return '<div class="heading"><div><h1>إجماليات الاستثمار والعائد</h1><p class="muted">'+esc(p.label)+' · موازنة '+pn(preferences.year)+'</p></div>'+
  action('go','تعديل مدخلات الاستثمار','control','primary')+'</div>'+
- controlCards([['إجمالي الاستثمار',pm(base)],['تكلفة المتر المبني',pm(base/p.gross)],['تكلفة كل غرفة أو جناح',pm(base/p.keys)],['صافي الربح إلى الاستثمار',returnPercent(year.net,base)]])+
- displaySection('حصر التكلفة الاستثمارية',['البند','التكلفة','من إجمالي الاستثمار','لكل متر مبني','لكل غرفة'],value.rows.concat([['الإجمالي',base]]).map(([label,n])=>[
+ controlCards([['إجمالي الاستثمار التقديري',pm(p.investmentEstimate)],['التمويل المستهدف',pm(p.fundingTarget)],['حصر البنود المدرجة',pm(base)],['تكلفة المتر المبني',pm(projectTotal/p.gross)],['تكلفة كل غرفة أو جناح',pm(projectTotal/p.keys)],['صافي الربح التخطيطي إلى الاستثمار',returnPercent(year.net,p.investmentEstimate)]])+
+ displaySection('حصر التكلفة الاستثمارية',['البند','التكلفة','من إجمالي الحصر','لكل متر مبني','لكل غرفة'],value.rows.concat([['إجمالي الحصر',base]]).map(([label,n])=>[
   esc(label),pm(n),returnPercent(n,base),pm(n/p.gross),pm(n/p.keys)
  ]))+
  displaySection('مقارنة السنة التشغيلية مع الاستثمار',['البند','سنوي','من الاستثمار','لكل غرفة سنويًا','لكل ليلة مباعة'],margin.map(([label,n])=>[
-  label,pm(n),returnPercent(n,base),pm(n/p.keys),year.sold?pm(n/year.sold):'بانتظار إشغال'
+  label,pm(n),returnPercent(n,projectTotal),pm(n/p.keys),year.sold?pm(n/year.sold):'بانتظار إشغال'
  ]))+
- panel('قراءة الاستثمار',row('مضاعف الاستثمار إلى الإيرادات',year.revenue?pn(base/year.revenue)+' مرة':'بانتظار إيراد')+
+ panel('قراءة الاستثمار',row('مضاعف الاستثمار إلى الإيرادات',year.revenue?pn(projectTotal/year.revenue)+' مرة':'بانتظار إيراد')+
  row('متوسط سعر الليلة ADR',year.sold?pm(year.roomRevenue/year.sold):'بانتظار إشغال')+
  row('إيراد الغرفة المتاحة RevPAR',pm(year.roomRevenue/year.available))+
  row('مدة الاسترداد البسيطة بصافي الربح والإهلاك',year.net+year.depreciation>0?pn(base/(year.net+year.depreciation))+' سنة تقريبًا':'لا يتحقق الاسترداد ضمن التدفق السنوي المقدر')+
@@ -132,7 +132,7 @@ function controlCharts(p,annual) {
 }
 let controlError='';
 function adminPage(){
- const p=profile(), annual=forecast(p,0,daysInYear(preferences.year)), inv=investment(p);
+ const p=profile(), annual=forecast(p,0,daysInYear(preferences.year));
  const choices=Object.entries(scenarios).map(([key,x])=>[key,x.label]);
  const forms='<form id="master-form">'+panel('المنشأة والسعة والأسعار','<div class="plan-controls">'+choose('masterScenario','نوع المنشأة',choices,preferences.scenario)+
  '<div id="master-stars">'+starFields(preferences.scenario)+'</div>'+
@@ -142,8 +142,8 @@ function adminPage(){
  panel('مدخلات التشغيل والتمويل','<div class="plan-controls">'+editableBudget.map(([key,label,min,max])=>numberField(key,label,budgetInputs[key],min,max)).join('')+'</div>')+
  '<p role="alert" class="control-error">'+esc(controlError)+'</p><button class="primary">اعتماد الإعدادات وتحديث المنصة</button></form>';
  return '<div class="heading"><div><h1>لوحة التحكم</h1><p class="muted">إعدادات التشغيل والموازنة والاستثمار · '+esc(p.label)+'</p></div>'+action('go','لوحة القيادة','dashboard')+'</div>'+
- controlCards([['الغرف والأجنحة',pn(p.keys)],['ليالي مباعة سنويًا',pn(annual.sold)],['الإيرادات السنوية',pm(annual.revenue)],['الاستثمار الكلي',pm(inv.total)],['العائد السنوي الصافي',returnPercent(annual.net,inv.total)]])+
- forms+'<p class="muted">اختيار المنشأة يفتح سجل تشغيلها المستقل. السعة وأسعار أنواع الغرف ومدخلات الاستثمار تُحفظ لكل منشأة. معاملات الإشغال والتكلفة العامة مشتركة بين السيناريوهين. يشغّل نموذج الفندق أربعة مطاعم من 200 غرفة فأكثر، ويخفض عددها عند سعة أقل. تعديل السعة يحافظ على الحجوزات والمعاملات المثبتة. تؤثر الأسعار الجديدة في التوقعات والحجوزات اللاحقة.</p>'+
+ controlCards([['الغرف والأجنحة',pn(p.keys)],['ليالي مباعة سنويًا',pn(annual.sold)],['الإيرادات السنوية',pm(annual.revenue)],['الاستثمار التقديري',pm(p.investmentEstimate)],['التمويل المستهدف',pm(p.fundingTarget)],['العائد السنوي الصافي',returnPercent(annual.net,p.investmentEstimate)]])+
+ forms+'<p class="muted">السعة والأسعار والإشغال مدخلات تخطيطية قابلة للتعديل. يبدأ سجل التشغيل فارغًا وتُحفظ إدخالاته في هذا المتصفح.</p>'+
  classificationPanel()+controlCharts(p,annual)+dashboardDirectory();
 }
 function capacityFields(scenario){

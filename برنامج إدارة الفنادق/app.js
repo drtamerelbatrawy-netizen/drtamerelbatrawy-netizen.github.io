@@ -2,7 +2,7 @@
 
 const groups = [
   ['تشغيل المنشأة', 'control dashboard rooms bookings reception housekeeping maintenance'],
-  ['المبيعات وتجربة الضيف', 'rates servicePlan channels guests pos events resort feasibility'],
+  ['المبيعات وتجربة الضيف', 'rates servicePlan channels guests pos events feasibility'],
   ['الموارد والرقابة', 'stock folio finance departmentPL operatingCosts staff staffingPlan compliance reports'],
   ['التخطيط والاستثمار', Object.keys(planningTitles).filter(key=>!['servicePlan','feasibility','staffingPlan'].includes(key)).concat('capitalSummary').join(' ')]
 ];
@@ -28,7 +28,7 @@ const modules = {
   compliance: ['الجودة والسلامة والامتثال','قوائم مراجعة مرتبطة بالمرجع والمسؤول والدليل.', 'title:البند source:المصدر owner:المسؤول due:الموعد:date evidence:الدليل '+statusField],
   reports: ['التقارير والتحليلات','مؤشرات تحسب من المعاملات المسجلة في النسخة التجريبية.']
 };
-const key = 'iwan-hotel-demo-1';
+const key = 'anam-hospitality-1';
 const date = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const addDays = (day, offset) => {
   const value = new Date(day+'T00:00:00Z');
@@ -36,91 +36,29 @@ const addDays = (day, offset) => {
   return value.toISOString().slice(0,10);
 };
 const roomTypes = () => capacityMix().map(x=>x[0]);
-const initial = () => ({
-  day:date, closed:[], ledger:[], audit:[],
-  rooms:hotelRooms([],capacityMix()).map(x=>x.id==='102'?{...x,clean:'تحتاج تنظيف'}:x),
-  bookings:[
-    {id:'B101',guest:'ضيف تجريبي 1',room:'101',start:date,end:addDays(date,2),rate:450,source:'مباشر',status:'مؤكد'},
-    {id:'B102',guest:'ضيف تجريبي 2',room:'103',start:date,end:addDays(date,1),rate:540,source:'شركة',status:'مقيم'},
-    {id:'B103',guest:'ضيف تجريبي 3',room:'102',start:date,end:addDays(date,1),rate:390,source:'مباشر',status:'مؤكد'}
-  ],
-  maintenance:[], rates:[{id:'R1',title:'السعر المرن',type:roomTypes()[0],start:date,end:addDays(date,30),amount:450,min:1,status:'تجريبي'}],
-  channels:[{id:'C1',title:'الحجز المباشر',mapping:'DIRECT',commission:0,status:'سجل تجريبي'}],
-  guests:[], pos:[], events:[], resort:[], stock:[], finance:[], staff:[],
+function initial(){
+ return {
+  day:date, closed:[], ledger:[], audit:[], rooms:hotelRooms([],capacityMix()),
+  bookings:[], maintenance:[], rates:[], channels:[], guests:[], pos:[], events:[],
+  resort:[], stock:[], finance:[], staff:[],
   compliance:[
-    {id:'Q1',title:'توثيق التراخيص والشهادات',source:'اشتراطات مرافق الإيواء السياحي.docx',owner:'الإدارة',status:'قيد المراجعة'},
-    {id:'Q2',title:'مراجعة تصنيف الفندق والتجهيزات',source:'الإشتراطات الإلزامية لفندق 4 نجوم.docx',owner:'الجودة',status:'قيد المراجعة'},
-    {id:'Q3',title:'مراجعة ترخيص وربط الرصد السياحي',source:'الخريطة الشاملة — التحقق الخاص بالتشغيل في السعودية',owner:'الإدارة',status:'قيد المراجعة'}
+   {id:'Q1',title:'التحقق من الترخيص السياحي والطاقة المعتمدة',source:'وزارة السياحة',owner:'الإدارة',status:'قيد المراجعة'},
+   {id:'Q2',title:'متطلبات تصنيف الشقق الفندقية',source:'وزارة السياحة',owner:'الجودة',status:'قيد المراجعة'},
+   {id:'Q3',title:'التحقق من السلامة وتراخيص الأغذية والمشروبات',source:'الجهات المختصة',owner:'الإدارة',status:'قيد المراجعة'}
   ]
-});
-function seedExampleRecords(data) {
-  const samples = {
-    maintenance:[{id:'M-DEMO',room:'104',title:'تنظيف فلتر التكييف',asset:'وحدة تكييف الغرفة',owner:'الهندسة',status:'مغلق'}],
-    guests:[{id:'G-DEMO',title:'ضيف تجريبي 2',tier:'فضية',preference:'غرفة هادئة',consent:'موافقة تجريبية',issue:'طلب وسادة إضافية'}],
-    channels:[{id:'C-DEMO',title:'حجوزات الشركات',mapping:'CORP',commission:6,status:'تعاقد تجريبي'}],
-    pos:[{id:'P-DEMO',booking:'B102',outlet:'المطعم الرئيسي',title:'عشاء تجريبي',amount:140}],
-    events:[{id:'E-DEMO',title:'اجتماع فريق المبيعات',company:'شركة تجريبية',hall:'قاعة 1',start:date+'T10:00',end:date+'T14:00',rooms:6,beo:'ضيافة 24 شخصًا وشاشة عرض',status:'مؤكد'}],
-    resort:[{id:'A-DEMO',title:'تدليك استرخاء',resource:'غرفة علاج 1',staff:'معالج الوردية',equipment:'سرير علاجي 1',start:date+'T15:00',end:date+'T16:00',capacity:1,status:'مؤكد'}],
-    stock:[{id:'S-DEMO',title:'طقم مناشف حمام',store:'مخزن البياضات',supplier:'مورد تجريبي',qty:36,order:'PO-101',receipt:'GR-101',invoice:'IV-101',status:'مطابق'}],
-    finance:[{id:'F-DEMO',title:'مستلزمات غرف',center:'تكلفة الإقامة',period:date.slice(0,7),budget:12500,actual:8400,reference:'JV-101',status:'مراجعة أولية'}],
-    staff:[{id:'SFT-DEMO',title:'موظف تجريبي',role:'مشرف وردية',team:'الاستقبال',date,shift:'صباحية',training:'تسليم الوردية',status:'مجدول'}]
-  };
-  for (const [name,records] of Object.entries(samples)) {
-    if (!data[name].length && (name!=='pos'||data.bookings.some(b=>b.id==='B102'&&b.status==='مقيم'))) {
-      data[name].push(...records);
-      if(name==='pos') data.ledger.push({id:'L-DEMO',booking:'B102',title:'المطعم الرئيسي · عشاء تجريبي',amount:140,day:data.day,kind:'pos'});
-    }
-  }
-  for (const record of data.compliance.filter(r=>['Q1','Q2','Q3'].includes(r.id))) {
-    record.due ||= addDays(data.day,30);
-    record.evidence ||= 'محضر تحقق تجريبي قيد التحضير';
-  }
-  data.examplesVersion=1;
+ };
 }
 let state;
-function activateProperty() {
-const stored = JSON.parse(localStorage.getItem(chosenKey()));
-const originalSample=preferences.scenario==='hotel'&&stored&&stored.rooms.length===80&&stored.audit.length>0&&stored.audit.every(x=>['إقفال يوم تشغيل تجريبي','تجهيز وردية تجريبية عند إشغال ليلي 60%'].includes(x.label));
-state = stored&&!originalSample ? stored : initial();
-if(preferences.scenario==='hotel'&&stored&&!originalSample&&state.rooms.length===80&&!preferences.roomMix?.hotel) {
- state.rooms=hotelRooms(state.rooms,capacityMix());
- state.rates=state.rates.map(x=>x.type==='فيلا'?{...x,type:'جناح تنفيذي'}:x);
- localStorage.setItem(chosenKey(),JSON.stringify(state));
-}
-if (!stored||originalSample) {
-  const basePrice=controlProfile().units[0].price;
-  state.bookings[0].rate=basePrice;
-  state.bookings[1].rate=basePrice;
-  state.bookings[2].rate=basePrice;
-  const prior=addDays(date,-1);
-  state.closed.push(prior);
-  state.bookings.push({id:'B100',guest:'إقامة سابقة تجريبية',room:'105',start:prior,end:date,arrived:prior,rate:480,source:'مباشر',status:'غادر'});
-  state.ledger.push(
-    {id:'PRIOR-ROOM',booking:'B100',title:'ليلة إقامة',amount:480,day:prior,kind:'room'},
-    {id:'PRIOR-PAY',booking:'B100',title:'تسوية دفع تجريبية',amount:-480,day:prior,kind:'payment'}
-  );
-  state.audit.push({at:prior+'T23:59:00+03:00',day:prior,label:'إقفال يوم تشغيل تجريبي'});
-  const units=controlProfile().units;
-  const rates=Object.fromEntries(units.map(u=>[u.name,u.price]));
-  const openings=mixAllocate(Math.max(1,Math.round(total(units,u=>u.count)*preferences.occupancy/100)),units.map(u=>u.count));
-  const seeds=units.flatMap((u,i)=>state.rooms.filter(r=>r.type===u.name&&!['101','102','103'].includes(r.id)).slice(0,Math.max(0,openings[i]-(i===0?1:0))));
-  for (const [i,r] of seeds.entries()) {
-    state.bookings.push({id:'DEMO-'+r.id,guest:'إقامة تجريبية '+(i+4),room:r.id,start:date,arrived:date,
-      end:addDays(date,2+i%3),rate:rates[r.type],source:['مباشر','شركة','وكيل'][i%3],status:'مقيم'});
-  }
-}
-if (!state.examplesVersion) {
-  seedExampleRecords(state);
-  localStorage.setItem(chosenKey(),JSON.stringify(state));
+function activateProperty(){
+ state=JSON.parse(localStorage.getItem(chosenKey()))||initial();
+ selectProperty();
 }
 
-salesSeed();seedOperatingDay();selectProperty();
-}
 function selectProperty(){
  accountId=state.bookings.find(b=>b.status==='مقيم')?.id||state.bookings[0]?.id||'';
  pricingDate=undefined;
  const p=controlProfile(), target=document.querySelector('.property');
- target.innerHTML='<strong>'+esc(p.label)+'</strong><small>'+pn(p.keys)+(p.isApartment?' وحدة ضيافة · ':' غرفة وجناح · ')+esc(p.classification)+' · '+pn(p.restaurants)+' مطاعم · '+pn(p.halls)+' قاعات</small>';
+ target.innerHTML='<strong>'+esc(p.label)+'</strong><small>'+esc(p.location)+' · '+pn(p.keys)+' وحدة مخططة · مطعم ومقهى</small>';
 }
 const active = b => b.status==='مؤكد' || b.status==='مقيم';
 const overlap = (a,b) => a.start<b.end && b.start<a.end;
@@ -428,7 +366,7 @@ $('export').onclick=()=>{
   const url=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));
   const link=document.createElement('a');
   link.href=url;
-  link.download='iwan-'+state.day+'.json';
+  link.download='anam-'+state.day+'.json';
   link.click();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 };

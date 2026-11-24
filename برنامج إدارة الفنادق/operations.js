@@ -31,7 +31,7 @@ function operatingDashboard(){
  const servicePlan=total(x.plan.services,s=>s.quantity);
  const measured=(x.available?percent(x.sold/x.available*100):'بانتظار قياس');
  return '<section class="hero"><p class="eyebrow">يوم العمل · '+esc(day)+'</p><h1>لوحة عمليات المنشأة</h1>'+
- '<p>إشغال الليلة من الحجوزات '+measured+' · مستهدف التشغيل '+percent(preferences.occupancy)+' · الإشغال اللحظي '+pn(x.physical)+' غرفة.</p></section>'+
+ '<p>إشغال الليلة من الحجوزات '+measured+' · الإشغال التخطيطي '+percent(preferences.occupancy)+' · الإشغال اللحظي '+pn(x.physical)+' غرفة.</p></section>'+
  controlCards([['الليالي المتاحة للبيع',pn(x.available)],['الليالي المباعة على الدفاتر',pn(x.sold)],['غرف متاحة لحجز جديد',pn(x.free.length)],
  ['وصول اليوم · الإجمالي',pn(x.arrivals.length)],['مغادرة اليوم · الإجمالي',pn(x.departures.length)],['إيراد الغرف المتوقع من حجوزات الليلة',pm(x.gross)],
  ['إيراد الغرف المرحّل',pm(x.postedRevenue)],['إيراد الخدمات المرحّل',pm(a.pos)],['التحصيل المسجل',pm(a.payment)]])+
