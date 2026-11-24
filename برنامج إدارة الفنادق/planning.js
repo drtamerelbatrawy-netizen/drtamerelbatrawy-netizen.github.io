@@ -70,7 +70,12 @@ const proposedServices = [
  ['الرحلات السياحية','سيارتان كبيرتان مقترحتان · إيراد وتكلفة تخطيطيان']
 ];
 const planStorage='anam-planning-1';
-const preferences={scenario:'apartments',year:2027,month:1,occupancy:60,priceIndex:100,costIndex:100,buildIndex:100,equipmentIndex:100,...JSON.parse(localStorage.getItem(planStorage)||'{}')};
+const savedPreferences=JSON.parse(localStorage.getItem(planStorage)||'{}');
+const preferences={scenario:'apartments',year:2027,month:1,occupancy:75,priceIndex:128,costIndex:100,buildIndex:100,equipmentIndex:100,...savedPreferences};
+if(preferences.returnPlanVersion!==1){
+ Object.assign(preferences,{occupancy:75,priceIndex:128,returnPlanVersion:1});
+ localStorage.setItem(planStorage,JSON.stringify(preferences));
+}
 const total=(rows, project=x=>x)=>rows.reduce((sum,x,i)=>sum+project(x,i),0);
 const nearest=(value,step=10)=>Math.round(value/step)*step;
 
